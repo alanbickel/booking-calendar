@@ -131,11 +131,70 @@ class Calendar {
       if(monthInFuture || monthInPresent && this.currentDate.getDate() > this.baseDate.getDate())
       td.classList.add("dayFuture");
       //persist date value
-      (<any>td.dataset).date = this.dateToString(this.currentYear, this.currentMonth, this.currentDate.getDate());
+      (<any>td.dataset).date = this.dateToString(this.currentYear, this.currentMonth, counter);
       // add conflicts | entries from data file
+      console.log(this.dateToString(this.currentYear, this.currentMonth, counter));
 
-
+      var txt = document.createElement("span");
+        txt.innerText = counter.toString();
+        td.appendChild(txt);
+        tr.appendChild(td);
+        weekdays2++;
+        counter++;
     }
+    //need to pad last row? 
+    let nextMonthCounter = 1;
+    while(weekdays2 < 7){
+      var txt = document.createElement("span");
+      txt.innerText = nextMonthCounter.toString();
+      var td = document.createElement("td");
+      td.classList.add("day");
+      td.classList.add('day-nextmonth');
+      td.classList.add("dayFuture");
+
+      let nextMonthDate = this.dateToString(next.year, next.month, nextMonthCounter);
+      console.log('nextMonthDate: ', nextMonthDate);
+      td.dataset.date = nextMonthDate;
+      td.appendChild(txt);
+      tr.appendChild(td);
+      nextMonthCounter ++;
+      weekdays2++;
+    }
+
+    this.buildTable(tbl_html);
+  }
+
+  buildTable = (docFrag : DocumentFragment) => {
+    //construct Table
+    var cal_tbl = document.createElement("table");
+    cal_tbl.id = "calendar-table";
+    cal_tbl.classList.add("calendar");
+    //header
+    var tbl_hdr = document.createElement("th");
+    tbl_hdr.classList.add("cal-header");
+    tbl_hdr.id = "cal-tbl-header";
+    tbl_hdr.colSpan = 7;
+
+    var hdr_txt = document.createElement("div");
+    hdr_txt.innerText = monthNames[this.currentMonth] + " " + this.currentYear;
+    tbl_hdr.appendChild(hdr_txt);
+
+    var day_row = document.createElement("tr");
+    day_row.classList.add("dayNames");
+
+    for (var i in dayNames) {
+      var temp = document.createElement("td");
+      temp.classList.add("header-row");
+      temp.innerText = dayNames[i];
+      day_row.appendChild(temp);
+    }
+    //append calendar sections
+    cal_tbl.appendChild(tbl_hdr);
+    cal_tbl.appendChild(day_row);
+    cal_tbl.appendChild(docFrag);
+    this.parent.appendChild(cal_tbl);
+    //add day of week bar
+    this.addNav();
   }
 
   dateToString = (y:number, m: number, d: number): string => {
@@ -155,5 +214,39 @@ class Calendar {
   febLength = (year : number): number => {
     if ((year % 100 != 0 && year % 4 == 0) || year % 400 == 0) return 29;
     else return 28;
+  }
+
+  addNav = () => {
+    let pointer = this;
+    let navLeft = document.createElement('div');
+    let navRight = document.createElement('div');
+
+    navLeft.classList.add("nav-arrow", "nav-left");
+    navRight.classList.add("nav-arrow", "nav-right");
+
+    navLeft.onclick = function(){
+      pointer.update(false);
+    };
+
+    navRight.onclick = function(){
+      pointer.update(true);
+    };
+    let arrowLeft = document.createElement('i');
+    arrowLeft.classList.add('fa');
+    arrowLeft.classList.add('fa-arrow-left');
+    let arrowRight = document.createElement('i');
+    arrowRight.classList.add('fa');
+    arrowRight.classList.add('fa-arrow-right');
+
+    navLeft.appendChild(arrowLeft);
+    navRight.appendChild(arrowRight);
+
+    let header = document.getElementById('cal-tbl-header');
+    header.insertBefore(navLeft, header.firstChild);
+    header.appendChild(navRight);
+  }
+
+  update = (isRightClick : boolean) => {
+
   }
 }
