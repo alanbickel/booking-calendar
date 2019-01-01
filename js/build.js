@@ -53,6 +53,30 @@ var Calendar = (function () {
         this.setDriverLocation = function (driverLocation) {
             _this.driverLocation = driverLocation;
         };
+        this.getData = function () {
+            var pointer = _this;
+            if (!_this.driverLocation) {
+                throw new Error('data source location must be set via calendar.setDriverLocation(url).');
+            }
+            $.ajax({
+                url: _this.driverLocation,
+                dataType: "text"
+            })
+                .done(function (response) {
+                var d = atob(response), e;
+                try {
+                    e = JSON.parse(d);
+                }
+                catch (error) {
+                    console.log(error);
+                }
+                pointer.data = e;
+                pointer.render();
+            })
+                .fail(function (xhr) {
+                console.log('data lookup failure: ', xhr);
+            });
+        };
         /**
          * step forward | back a month
          */
@@ -143,6 +167,9 @@ var Calendar = (function () {
                 td_2.dataset.date = _this.dateToString(_this.currentYear, _this.currentMonth, counter);
                 // add conflicts | entries from data file
                 console.log(_this.dateToString(_this.currentYear, _this.currentMonth, counter));
+                //check against datastore for conflict
+                if (!!_this.data)
+                    _this.compare(td_2, _this.dateToString(_this.currentYear, _this.currentMonth, counter));
                 var txt = document.createElement("span");
                 txt.innerText = counter.toString();
                 td_2.appendChild(txt);
@@ -168,6 +195,13 @@ var Calendar = (function () {
                 weekdays2++;
             }
             _this.buildTable(tbl_html);
+        };
+        this.compare = function (td, dateString) {
+            _this.data.forEach(function (e) {
+                console.log(e.string);
+            });
+            var data = _this.data;
+            debugger;
         };
         this.buildHeader = function (table) {
             var header = document.createElement('thead');

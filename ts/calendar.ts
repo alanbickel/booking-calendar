@@ -12,7 +12,8 @@ class Calendar {
   private baseMonth : number;
   private currentDate :Date;
   private baseDate : Date;
-  
+  //retrieve data from file
+  private data : any;
 
 
   constructor(parentElement : HTMLElement, dateOverride ? : Date){
@@ -33,6 +34,29 @@ class Calendar {
    */
   setDriverLocation = (driverLocation :string): void => {
     this.driverLocation = driverLocation;
+  }
+
+  getData = () => {
+    let pointer= this;
+    if(! this.driverLocation){
+      throw new Error('data source location must be set via calendar.setDriverLocation(url).');
+    }
+
+    $.ajax({
+      url: this.driverLocation,
+      dataType: "text"
+    })
+    .done(response => {
+      let d = atob(response), e;
+
+      try{e = JSON.parse(d)}
+      catch(error){console.log(error)}
+      pointer.data = e;
+      pointer.render();
+    })
+    .fail(xhr => {
+      console.log('data lookup failure: ', xhr);
+    })
   }
 
   /**
@@ -135,6 +159,10 @@ class Calendar {
       // add conflicts | entries from data file
       console.log(this.dateToString(this.currentYear, this.currentMonth, counter));
 
+      //check against datastore for conflict
+      if(!!this.data)
+        this.compare(td, this.dateToString(this.currentYear, this.currentMonth, counter));
+
       var txt = document.createElement("span");
         txt.innerText = counter.toString();
         td.appendChild(txt);
@@ -162,6 +190,22 @@ class Calendar {
     }
 
     this.buildTable(tbl_html);
+  }
+
+  /**
+   * check current td's date against known events
+   */
+  compare = (td: HTMLElement, dateString: string) => {
+
+    for(let i = 0; i  <this.data.length; i++){
+      let date = this.data[i];
+      //update element classlist on date match
+      if(date.string == dateString){
+        //let iconClasses = date.glyphicon;
+        let status = date.status;
+        td.classList.add(status);
+      }
+    }
   }
 
   buildHeader = (table : HTMLTableElement) => {
@@ -268,6 +312,5 @@ class Calendar {
 
     this.currentDate = new Date(this.currentYear, this.currentMonth);
     this.render();
-
   }
 }

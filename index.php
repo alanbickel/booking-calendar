@@ -15,7 +15,9 @@
   <script>
     $(document).ready(function(){
       let calendar = new Calendar(document.getElementById('calendar-div'));
-      calendar.render();
+      calendar.setDriverLocation("./services/dates.dat");
+      calendar.getData();
+     // calendar.render();
     });
   </script>
 </head>
