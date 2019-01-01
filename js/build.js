@@ -13,13 +13,13 @@ var monthNames = [
     "December"
 ];
 var dayNames = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thrusday",
-    "Friday",
-    "Saturday"
+    "Sun",
+    "Mon",
+    "Tues",
+    "Weds",
+    "Thur",
+    "Fri",
+    "Sat"
 ];
 var calendarHeaders = [
     "Sun",
@@ -169,32 +169,38 @@ var Calendar = (function () {
             }
             _this.buildTable(tbl_html);
         };
-        this.buildTable = function (docFrag) {
-            //construct Table
-            var cal_tbl = document.createElement("table");
-            cal_tbl.id = "calendar-table";
-            cal_tbl.classList.add("calendar");
-            //header
-            var tbl_hdr = document.createElement("th");
-            tbl_hdr.classList.add("cal-header");
-            tbl_hdr.id = "cal-tbl-header";
-            tbl_hdr.colSpan = 7;
-            var hdr_txt = document.createElement("div");
-            hdr_txt.innerText = monthNames[_this.currentMonth] + " " + _this.currentYear;
-            tbl_hdr.appendChild(hdr_txt);
-            var day_row = document.createElement("tr");
-            day_row.classList.add("dayNames");
+        this.buildHeader = function (table) {
+            var header = document.createElement('thead');
+            var hr = document.createElement('tr');
+            hr.classList.add('cal-label-row');
+            var th = document.createElement('th');
+            th.classList.add("cal-header");
+            th.id = "cal-tbl-header";
+            th.colSpan = 7;
+            var text = document.createElement('div');
+            text.innerText = monthNames[_this.currentMonth] + " " + _this.currentYear;
+            hr.appendChild(th);
+            th.appendChild(text);
+            header.appendChild(hr);
+            // add day names
+            var dayRow = document.createElement('tr');
+            dayRow.classList.add('dayNames');
             for (var i in dayNames) {
-                var temp = document.createElement("td");
-                temp.classList.add("header-row");
-                temp.innerText = dayNames[i];
-                day_row.appendChild(temp);
+                var th_1 = document.createElement("td");
+                th_1.classList.add("header");
+                th_1.innerText = dayNames[i];
+                dayRow.appendChild(th_1);
             }
-            //append calendar sections
-            cal_tbl.appendChild(tbl_hdr);
-            cal_tbl.appendChild(day_row);
-            cal_tbl.appendChild(docFrag);
-            _this.parent.appendChild(cal_tbl);
+            header.appendChild(dayRow);
+            table.appendChild(header);
+        };
+        this.buildTable = function (bodyContent) {
+            var table = document.createElement('table');
+            table.classList.add('calendar');
+            table.id = "calendar-table";
+            _this.buildHeader(table);
+            table.appendChild(bodyContent);
+            _this.parent.appendChild(table);
             //add day of week bar
             _this.addNav();
         };

@@ -15,13 +15,13 @@ let monthNames = [
 ];
 
 let dayNames = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thrusday",
-  "Friday",
-  "Saturday"
+  "Sun",
+  "Mon",
+  "Tues",
+  "Weds",
+  "Thur",
+  "Fri",
+  "Sat"
 ];
 
 let calendarHeaders = [

@@ -5,7 +5,7 @@
 <head>
 
  <link rel="stylesheet"  href="./vendor/font-awesome-4.7.0/css/font-awesome.min.css">
- 
+ <link rel="stylesheet" href="./css/styles.css">
 <script
   src="https://code.jquery.com/jquery-3.3.1.min.js"
   integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="

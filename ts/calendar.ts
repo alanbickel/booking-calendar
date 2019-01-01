@@ -164,35 +164,48 @@ class Calendar {
     this.buildTable(tbl_html);
   }
 
-  buildTable = (docFrag : DocumentFragment) => {
-    //construct Table
-    var cal_tbl = document.createElement("table");
-    cal_tbl.id = "calendar-table";
-    cal_tbl.classList.add("calendar");
-    //header
-    var tbl_hdr = document.createElement("th");
-    tbl_hdr.classList.add("cal-header");
-    tbl_hdr.id = "cal-tbl-header";
-    tbl_hdr.colSpan = 7;
+  buildHeader = (table : HTMLTableElement) => {
+    let header = document.createElement('thead');
+    let hr = document.createElement('tr');
+    hr.classList.add('cal-label-row');
+    let th = <HTMLTableHeaderCellElement>document.createElement('th');
+    th.classList.add("cal-header");
+    th.id = "cal-tbl-header";
+    th.colSpan = 7;
 
-    var hdr_txt = document.createElement("div");
-    hdr_txt.innerText = monthNames[this.currentMonth] + " " + this.currentYear;
-    tbl_hdr.appendChild(hdr_txt);
+    let text = document.createElement('div');
+    text.innerText = monthNames[this.currentMonth] + " " + this.currentYear;
 
-    var day_row = document.createElement("tr");
-    day_row.classList.add("dayNames");
+    hr.appendChild(th);
+    th.appendChild(text);
+    header.appendChild(hr);
+
+    // add day names
+    let dayRow = document.createElement('tr');
+    dayRow.classList.add('dayNames');
 
     for (var i in dayNames) {
-      var temp = document.createElement("td");
-      temp.classList.add("header-row");
-      temp.innerText = dayNames[i];
-      day_row.appendChild(temp);
+      let th = document.createElement("td");
+      th.classList.add("header");
+      th.innerText = dayNames[i];
+      dayRow.appendChild(th);
     }
-    //append calendar sections
-    cal_tbl.appendChild(tbl_hdr);
-    cal_tbl.appendChild(day_row);
-    cal_tbl.appendChild(docFrag);
-    this.parent.appendChild(cal_tbl);
+    header.appendChild(dayRow);
+
+    table.appendChild(header);
+
+  }
+
+  buildTable = (bodyContent : DocumentFragment) => {
+
+    let table = document.createElement('table');
+    table.classList.add('calendar');
+    table.id = "calendar-table";
+
+    this.buildHeader(table);
+   
+    table.appendChild(bodyContent);
+    this.parent.appendChild(table);
     //add day of week bar
     this.addNav();
   }

@@ -1,0 +1,24 @@
+/*minimal styling for layout and date status*/
+
+/*Table Head*/
+.nav-left{
+  float: left;
+  margin-left: 2%;
+}
+
+.nav-right{
+  float: right;
+  margin-top: -18px;
+  margin-right: 2%;
+}
+
+td.header{
+  padding: 2px;
+  text-align: center;
+}
+
+.day {
+  text-align: center;
+  width: 50px;
+  height: 50px;
+}
