@@ -249,6 +249,12 @@ var Calendar = (function () {
             header.appendChild(navRight);
         };
         this.update = function (isRightClick) {
+            var key = isRightClick ? "next" : "prev";
+            var adj = _this.getSibling(key);
+            _this.currentMonth = adj.month;
+            _this.currentYear = adj.year;
+            _this.currentDate = new Date(_this.currentYear, _this.currentMonth);
+            _this.render();
         };
         this.parent = parentElement;
         //set default date

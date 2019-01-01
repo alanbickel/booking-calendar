@@ -261,5 +261,13 @@ class Calendar {
 
   update = (isRightClick : boolean) => {
 
+    let key = isRightClick ? "next" : "prev";
+    let adj = this.getSibling(key);
+    this.currentMonth = adj.month;
+    this.currentYear = adj.year;
+
+    this.currentDate = new Date(this.currentYear, this.currentMonth);
+    this.render();
+
   }
 }
