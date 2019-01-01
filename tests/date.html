@@ -1,0 +1,40 @@
+<!DOCTYPE <!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Page Title</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
+  <script src="../js/build.js"></script>
+
+  <script>
+  
+  document.onreadystatechange = function(){
+    if(document.readyState === "complete"){
+      
+      let date1 = new Date('December 17, 1995 03:24:00');
+      let litmus1 = {
+       month :  date1.getMonth() -1, 
+       year : date1.getFullYear()
+      }
+
+      let calendar = new Calendar(document.getElementById('calendar-div'), date1); 
+
+      //test prev | next months
+      let prevMonth = calendar.getSiblingMonth('prev');
+      debugger;
+
+      console.assert(litmus1.month == prevMonth.month && litmus1.year == prevMonth.year, "Litmus 1 not passed");  
+  
+      //document.getElementById('testResults').innerHTML = JSON.stringify(prevMonth);
+    }
+  }
+
+  </script>
+</head>
+<body>
+  <h4>Date Mechanism Tests</h4>
+  <h5>Open console to view test results</h5>
+</body>
+</html>
