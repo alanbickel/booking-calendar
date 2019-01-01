@@ -21,5 +21,6 @@
 </head>
 
 <body>
+  <h4>Event Calendar - Client</h4>
   <div id="calendar-div"></div>
 </body>
