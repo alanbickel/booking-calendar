@@ -1,0 +1,37 @@
+.display-form{
+  display : flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  width : 40vw;
+  margin-left: auto;
+  margin-right : auto;
+  border : 1px solid  rgba(0, 0, 255, .2);
+  box-shadow: 12px 12px 2px 1px rgba(0, 0, 0, 0.6);
+}
+
+.form-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.form-element-container{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: .1em;
+  margin-right: 10%;
+  width: 90%;
+}
+
+.form-element-input{
+  flex:2;
+}
+
+.form-element-container>label{
+  padding: .3em;
+  flex: 1;
+  text-align: center;
+}

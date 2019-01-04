@@ -1,4 +1,5 @@
 ///<reference path="./calendarData.ts" />
+///<reference path="./formBuilder.ts" />
 ///<reference path="../Types/jQuery/jquery.d.ts"/>
 class Calendar {
   //element to build calendadr table inside of
@@ -15,8 +16,9 @@ class Calendar {
   //retrieve data from file
   private data : any;
 
+  private form : FormBuilder;
 
-  constructor(parentElement : HTMLElement, dateOverride ? : Date){
+  constructor(parentElement : HTMLElement, form? : FormControl,   dateOverride ? : Date){
     this.parent = parentElement;
     //set default date
     this.baseDate = dateOverride ? dateOverride : new Date();
@@ -27,6 +29,9 @@ class Calendar {
     //year
     this.baseYear = this.baseDate.getFullYear();
     this.currentYear = this.baseYear;
+    //initialize submission form
+    let autoLoadStyles = true;
+    this.form = new FormBuilder(autoLoadStyles, form);
   }
   
   /**
