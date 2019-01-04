@@ -44,6 +44,7 @@ var daysPerMonth = [
     "30",
     "31"];
 ///<reference path="./calendarData.ts" />
+///<reference path="../Types/jQuery/jquery.d.ts"/>
 var Calendar = (function () {
     function Calendar(parentElement, dateOverride) {
         var _this = this;
@@ -196,12 +197,19 @@ var Calendar = (function () {
             }
             _this.buildTable(tbl_html);
         };
+        /**
+         * check current td's date against known events
+         */
         this.compare = function (td, dateString) {
-            _this.data.forEach(function (e) {
-                console.log(e.string);
-            });
-            var data = _this.data;
-            debugger;
+            for (var i = 0; i < _this.data.length; i++) {
+                var date = _this.data[i];
+                //update element classlist on date match
+                if (date.string == dateString) {
+                    //let iconClasses = date.glyphicon;
+                    var status_1 = date.status;
+                    td.classList.add(status_1);
+                }
+            }
         };
         this.buildHeader = function (table) {
             var header = document.createElement('thead');

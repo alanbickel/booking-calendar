@@ -1,5 +1,5 @@
 ///<reference path="./calendarData.ts" />
-
+///<reference path="../Types/jQuery/jquery.d.ts"/>
 class Calendar {
   //element to build calendadr table inside of
   private parent : HTMLElement;
@@ -182,7 +182,7 @@ class Calendar {
 
       let nextMonthDate = this.dateToString(next.year, next.month, nextMonthCounter);
       console.log('nextMonthDate: ', nextMonthDate);
-      td.dataset.date = nextMonthDate;
+      (<any>td.dataset).date = nextMonthDate;
       td.appendChild(txt);
       tr.appendChild(td);
       nextMonthCounter ++;
