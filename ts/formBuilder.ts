@@ -29,7 +29,19 @@ class FormBuilder {
      */
     let blockUIscript = document.createElement('script');
     blockUIscript.src = "./vendor/js/malsup/blockui.js";
+    let pointer = this;
 
+    blockUIscript.onload = function(){
+      pointer.showForm = function () {
+        $.blockUI({
+            message: document.getElementById('input-form'),
+            css: {
+                width: "40wh"
+            }
+        });
+    };
+      pointer.bindFormButtonActions();
+    }
     document.body.insertBefore(blockUIscript, document.body.firstChild);
 
 
@@ -161,8 +173,40 @@ class FormBuilder {
     document.body.appendChild(form);    
   }
 
-  addControlButtons  = () => {
+  bindFormButtonActions = () => {
 
+    $(document).on('click', '#form-cancel-button', function(){
+      $.unblockUI();
+    })
+  }
+
+  addControlButtons  = (formElement : HTMLElement) : void => {
+
+    let row = document.createElement("div");
+    row.classList.add('form-element-container');
+    row.classList.add('button-container');
+
+    let cancelButton = document.createElement('button');
+    cancelButton.innerText = "Cancel";
+    cancelButton.classList.add('form-button');
+    cancelButton.classList.add('cancel-button');
+    cancelButton.id = "form-cancel-button";
+
+    let submitButton = document.createElement('button');
+    submitButton.innerText = "Submit";
+    submitButton.classList.add('form-button');
+    submitButton.classList.add('submit-button');
+    submitButton.id = "form-submit-button";
+    
+  }
+
+  showForm = () => {
+    $.blockUI({
+      message : document.getElementById('input-form'), 
+      css : {
+        width : "40wh"
+      }
+    });
   }
 
   createLabel = (id, text):HTMLLabelElement =>  {

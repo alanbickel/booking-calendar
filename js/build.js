@@ -92,7 +92,33 @@ var FormBuilder = (function () {
             }
             document.body.appendChild(form);
         };
-        this.addControlButtons = function () {
+        this.bindFormButtonActions = function () {
+            $(document).on('click', '#form-cancel-button', function () {
+                $.unblockUI();
+            });
+        };
+        this.addControlButtons = function (formElement) {
+            var row = document.createElement("div");
+            row.classList.add('form-element-container');
+            row.classList.add('button-container');
+            var cancelButton = document.createElement('button');
+            cancelButton.innerText = "Cancel";
+            cancelButton.classList.add('form-button');
+            cancelButton.classList.add('cancel-button');
+            cancelButton.id = "form-cancel-button";
+            var submitButton = document.createElement('button');
+            submitButton.innerText = "Submit";
+            submitButton.classList.add('form-button');
+            submitButton.classList.add('submit-button');
+            submitButton.id = "form-submit-button";
+        };
+        this.showForm = function () {
+            $.blockUI({
+                message: document.getElementById('input-form'),
+                css: {
+                    width: "40wh"
+                }
+            });
         };
         this.createLabel = function (id, text) {
             var label = document.createElement("label");
@@ -158,6 +184,18 @@ var FormBuilder = (function () {
          */
         var blockUIscript = document.createElement('script');
         blockUIscript.src = "./vendor/js/malsup/blockui.js";
+        var pointer = this;
+        blockUIscript.onload = function () {
+            pointer.showForm = function () {
+                $.blockUI({
+                    message: document.getElementById('input-form'),
+                    css: {
+                        width: "40wh"
+                    }
+                });
+            };
+            pointer.bindFormButtonActions();
+        };
         document.body.insertBefore(blockUIscript, document.body.firstChild);
         /**define default client input form */
         this.defaultForm = form ? form : {
@@ -228,7 +266,6 @@ var FormBuilder = (function () {
         };
         this.validationFunctions = [];
         this.buildForm();
-        // this.testBlockUI();
     }
     return FormBuilder;
 })();
@@ -361,6 +398,12 @@ var Calendar = (function () {
                 //check against datastore for conflict
                 if (!!_this.data)
                     _this.compare(td_2, _this.dateToString(_this.currentYear, _this.currentMonth, counter));
+                var pointer = _this;
+                td_2.onclick = function () {
+                    console.log('moo');
+                    debugger;
+                    pointer.form.showForm();
+                };
                 var txt = document.createElement("span");
                 txt.innerText = counter.toString();
                 td_2.appendChild(txt);

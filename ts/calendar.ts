@@ -168,6 +168,13 @@ class Calendar {
       if(!!this.data)
         this.compare(td, this.dateToString(this.currentYear, this.currentMonth, counter));
 
+      var pointer = this;
+        td.onclick = function(){
+          console.log('moo');
+          debugger;
+          pointer.form.showForm();
+        }
+
       var txt = document.createElement("span");
         txt.innerText = counter.toString();
         td.appendChild(txt);
@@ -193,6 +200,10 @@ class Calendar {
       nextMonthCounter ++;
       weekdays2++;
     }
+
+   
+
+
 
     this.buildTable(tbl_html);
   }
