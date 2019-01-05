@@ -1,13 +1,21 @@
 ///<reference path= "./formTemplates.ts" />
-
 ///<reference path= "../Types/jQuery/blockui.d.ts" />
 
 class FormBuilder {
 
   /**
+   * automate construction of 
+   * textbox
+   * textarea
+   * select
+   * checkbox 
+   * 
+   * elements & bind simple client-side validation on form 'submit'
    * 
    * TO DO!
-   * Radio group
+   * ~support Radio group
+   * ~ add CSS classes to template and implementation
+   * ~ add class to form container, and style width in CSS - not inline when blockUI called.
    */
 
   private defaultForm:FormControl; 
@@ -30,9 +38,17 @@ class FormBuilder {
     let blockUIscript = document.createElement('script');
     blockUIscript.src = "./vendor/js/malsup/blockui.js";
     let pointer = this;
-
+    /**
+     * bind click events for form 'submit' and 'cancel' buttons
+     * once deendency has loaded
+     */
     blockUIscript.onload = function(){
-      pointer.showForm = function () {
+
+      //define function that calls blockUI only when it is available & loaded
+      pointer.showForm = function (date: string) {
+
+        let header = document.getElementById('form-header');
+        header.innerText = date;
         $.blockUI({
             message: document.getElementById('input-form'),
             css: {
@@ -40,6 +56,7 @@ class FormBuilder {
             }
         });
     };
+    //onclick handlers added only after blockUI is available
       pointer.bindFormButtonActions();
     }
     document.body.insertBefore(blockUIscript, document.body.firstChild);
@@ -118,12 +135,6 @@ class FormBuilder {
     this.buildForm(); 
   }
 
-  testBlockUI = () => {
-    let elem  = document.getElementById("input-form");
-
-    $.blockUI({message : elem, css: {width: "40vw"}});
-  }
-
   buildForm = () =>  {
     let form = document.createElement('div'); 
     
@@ -134,6 +145,13 @@ class FormBuilder {
     formChild.classList.add('display-form'); 
 
     form.appendChild(formChild);
+
+    /**add  empty header element - to be populated with date on show */
+    let header = document.createElement('div');
+    header.classList.add('form-header');
+    header.id = "form-header";
+
+    formChild.appendChild(header);
 
     let formRows = this.defaultForm['rows'];
 
@@ -200,7 +218,7 @@ class FormBuilder {
     
   }
 
-  showForm = () => {
+  showForm = (date : string) => {
     $.blockUI({
       message : document.getElementById('input-form'), 
       css : {

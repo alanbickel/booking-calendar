@@ -1,6 +1,14 @@
 ///<reference path="./calendarData.ts" />
 ///<reference path="./formBuilder.ts" />
 ///<reference path="../Types/jQuery/jquery.d.ts"/>
+
+
+/**
+ * TODO
+ * ~implement default auto-load css 
+ */
+
+
 class Calendar {
   //element to build calendadr table inside of
   private parent : HTMLElement;
@@ -161,19 +169,15 @@ class Calendar {
       td.classList.add("dayFuture");
       //persist date value
       (<any>td.dataset).date = this.dateToString(this.currentYear, this.currentMonth, counter);
-      // add conflicts | entries from data file
-      console.log(this.dateToString(this.currentYear, this.currentMonth, counter));
+      
+      //add click handler for form display
+      this.addOnclick(td);
 
-      //check against datastore for conflict
+      //check against datastore for date matches
       if(!!this.data)
         this.compare(td, this.dateToString(this.currentYear, this.currentMonth, counter));
 
-      var pointer = this;
-        td.onclick = function(){
-          console.log('moo');
-          debugger;
-          pointer.form.showForm();
-        }
+      
 
       var txt = document.createElement("span");
         txt.innerText = counter.toString();
@@ -193,19 +197,26 @@ class Calendar {
       td.classList.add("dayFuture");
 
       let nextMonthDate = this.dateToString(next.year, next.month, nextMonthCounter);
-      console.log('nextMonthDate: ', nextMonthDate);
+      //console.log('nextMonthDate: ', nextMonthDate);
       (<any>td.dataset).date = nextMonthDate;
       td.appendChild(txt);
       tr.appendChild(td);
+      //add click handler for form display
+      this.addOnclick(td);
       nextMonthCounter ++;
       weekdays2++;
     }
 
-   
-
-
-
     this.buildTable(tbl_html);
+  }
+
+  //event listener calendar day button
+
+  addOnclick = (td : HTMLElement) =>{
+    var pointer = this;
+        td.onclick = function(){
+          pointer.form.showForm((<any>td.dataset).date);
+        }
   }
 
   /**

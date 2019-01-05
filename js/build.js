@@ -49,10 +49,6 @@ var FormBuilder = (function () {
     function FormBuilder(autoLoadCss, form) {
         var _this = this;
         if (autoLoadCss === void 0) { autoLoadCss = true; }
-        this.testBlockUI = function () {
-            var elem = document.getElementById("input-form");
-            $.blockUI({ message: elem, css: { width: "40vw" } });
-        };
         this.buildForm = function () {
             var form = document.createElement('div');
             form.style.display = "none";
@@ -60,6 +56,11 @@ var FormBuilder = (function () {
             var formChild = document.createElement('div');
             formChild.classList.add('display-form');
             form.appendChild(formChild);
+            /**add  empty header element - to be populated with date on show */
+            var header = document.createElement('div');
+            header.classList.add('form-header');
+            header.id = "form-header";
+            formChild.appendChild(header);
             var formRows = _this.defaultForm['rows'];
             for (var i = 0; i < formRows.length; i++) {
                 var rowData = formRows[i];
@@ -112,7 +113,7 @@ var FormBuilder = (function () {
             submitButton.classList.add('submit-button');
             submitButton.id = "form-submit-button";
         };
-        this.showForm = function () {
+        this.showForm = function (date) {
             $.blockUI({
                 message: document.getElementById('input-form'),
                 css: {
@@ -185,8 +186,15 @@ var FormBuilder = (function () {
         var blockUIscript = document.createElement('script');
         blockUIscript.src = "./vendor/js/malsup/blockui.js";
         var pointer = this;
+        /**
+         * bind click events for form 'submit' and 'cancel' buttons
+         * once deendency has loaded
+         */
         blockUIscript.onload = function () {
-            pointer.showForm = function () {
+            //define function that calls blockUI only when it is available & loaded
+            pointer.showForm = function (date) {
+                var header = document.getElementById('form-header');
+                header.innerText = date;
                 $.blockUI({
                     message: document.getElementById('input-form'),
                     css: {
@@ -194,6 +202,7 @@ var FormBuilder = (function () {
                     }
                 });
             };
+            //onclick handlers added only after blockUI is available
             pointer.bindFormButtonActions();
         };
         document.body.insertBefore(blockUIscript, document.body.firstChild);
@@ -272,6 +281,10 @@ var FormBuilder = (function () {
 ///<reference path="./calendarData.ts" />
 ///<reference path="./formBuilder.ts" />
 ///<reference path="../Types/jQuery/jquery.d.ts"/>
+/**
+ * TODO
+ * ~implement default auto-load css
+ */
 var Calendar = (function () {
     function Calendar(parentElement, form, dateOverride) {
         var _this = this;
@@ -393,17 +406,11 @@ var Calendar = (function () {
                     td_2.classList.add("dayFuture");
                 //persist date value
                 td_2.dataset.date = _this.dateToString(_this.currentYear, _this.currentMonth, counter);
-                // add conflicts | entries from data file
-                console.log(_this.dateToString(_this.currentYear, _this.currentMonth, counter));
-                //check against datastore for conflict
+                //add click handler for form display
+                _this.addOnclick(td_2);
+                //check against datastore for date matches
                 if (!!_this.data)
                     _this.compare(td_2, _this.dateToString(_this.currentYear, _this.currentMonth, counter));
-                var pointer = _this;
-                td_2.onclick = function () {
-                    console.log('moo');
-                    debugger;
-                    pointer.form.showForm();
-                };
                 var txt = document.createElement("span");
                 txt.innerText = counter.toString();
                 td_2.appendChild(txt);
@@ -421,14 +428,23 @@ var Calendar = (function () {
                 td.classList.add('day-nextmonth');
                 td.classList.add("dayFuture");
                 var nextMonthDate = _this.dateToString(next.year, next.month, nextMonthCounter);
-                console.log('nextMonthDate: ', nextMonthDate);
+                //console.log('nextMonthDate: ', nextMonthDate);
                 td.dataset.date = nextMonthDate;
                 td.appendChild(txt);
                 tr.appendChild(td);
+                //add click handler for form display
+                _this.addOnclick(td);
                 nextMonthCounter++;
                 weekdays2++;
             }
             _this.buildTable(tbl_html);
+        };
+        //event listener calendar day button
+        this.addOnclick = function (td) {
+            var pointer = _this;
+            td.onclick = function () {
+                pointer.form.showForm(td.dataset.date);
+            };
         };
         /**
          * check current td's date against known events
