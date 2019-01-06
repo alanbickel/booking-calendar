@@ -46,7 +46,7 @@ var daysPerMonth = [
 ///<reference path= "./formTemplates.ts" />
 ///<reference path= "../Types/jQuery/blockui.d.ts" />
 var FormBuilder = (function () {
-    function FormBuilder(autoLoadCss, form) {
+    function FormBuilder(autoLoadCss, form, formStyling) {
         var _this = this;
         if (autoLoadCss === void 0) { autoLoadCss = true; }
         this.buildForm = function () {
@@ -92,10 +92,17 @@ var FormBuilder = (function () {
                 formChild.appendChild(rowElement);
             }
             document.body.appendChild(form);
+            _this.addControlButtons(formChild);
         };
         this.bindFormButtonActions = function () {
+            var pointer = _this;
             $(document).on('click', '#form-cancel-button', function () {
                 $.unblockUI();
+            });
+            $(document).on('click', "#form-submit-button", function () {
+                var validInput = pointer.validate();
+                if (validInput)
+                    pointer.submitForm();
             });
         };
         this.addControlButtons = function (formElement) {
@@ -112,14 +119,9 @@ var FormBuilder = (function () {
             submitButton.classList.add('form-button');
             submitButton.classList.add('submit-button');
             submitButton.id = "form-submit-button";
-        };
-        this.showForm = function (date) {
-            $.blockUI({
-                message: document.getElementById('input-form'),
-                css: {
-                    width: "40wh"
-                }
-            });
+            row.appendChild(cancelButton);
+            row.appendChild(submitButton);
+            formElement.appendChild(row);
         };
         this.createLabel = function (id, text) {
             var label = document.createElement("label");
@@ -173,6 +175,48 @@ var FormBuilder = (function () {
             // element.style.flex = 1;
             return element;
         };
+        this.validate = function () {
+            var validationPool = _this.validationFunctions;
+            var result = false;
+            for (var i = 0; i < _this.validationFunctions.length; i++) {
+                var validation = _this.validationFunctions[i];
+                var inputValue = document.getElementById(validation.elementId).value;
+                if (!validation.function(inputValue)) {
+                    var message = validation.failMessage;
+                    var header = document.getElementById("form-header");
+                    var dateString = header.innerText;
+                    header.innerText = message;
+                    setTimeout(function () {
+                        header.innerText = dateString;
+                    }, 2000);
+                    return false;
+                }
+            }
+            return true;
+        };
+        this.submitForm = function () {
+            var pointer = _this;
+            var rows = _this.defaultForm['rows'];
+            var payload = {};
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                for (var j = 0; j < row.length; j++) {
+                    var node = row[j];
+                    var propName = node.name;
+                    var element = document.getElementById(node.id);
+                    payload[propName] = element.value;
+                }
+            }
+            /**
+             * TODO ajax request do write to .dat
+             */
+            debugger;
+        };
+        //modal styles
+        this.formStyling = formStyling ? formStyling : {
+            width: "40vw",
+            left: "30%"
+        };
         if (autoLoadCss) {
             var styleLink = document.createElement('link');
             styleLink.id = "auto-load-form-styles";
@@ -194,12 +238,11 @@ var FormBuilder = (function () {
             //define function that calls blockUI only when it is available & loaded
             pointer.showForm = function (date) {
                 var header = document.getElementById('form-header');
-                header.innerText = date;
+                var _date = new Date(date).toDateString();
+                header.innerText = _date;
                 $.blockUI({
                     message: document.getElementById('input-form'),
-                    css: {
-                        width: "40wh"
-                    }
+                    css: this.formStyling
                 });
             };
             //onclick handlers added only after blockUI is available
@@ -255,8 +298,10 @@ var FormBuilder = (function () {
                         validationErrorMessage: "Please enter your email.",
                         placeholder: "enter your email",
                         validation: function (value) {
-                            var validation = /^[a - zA - Z0-9._ - ] + @[a - zA - Z0-9. - ] + \.[a - zA - Z] {2, 4}$/;
-                            return validation.test(value);
+                            // let validation = /^[a - zA - Z0-9._ - ] + @[a - zA - Z0-9. - ] + \.[a - zA - Z] {2, 4}$/; 
+                            // return validation.test(value); 
+                            var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                            return re.test(String(value).toLowerCase());
                         }
                     }
                 ],
@@ -286,7 +331,7 @@ var FormBuilder = (function () {
  * ~implement default auto-load css
  */
 var Calendar = (function () {
-    function Calendar(parentElement, form, dateOverride) {
+    function Calendar(parentElement, form, formPosition, dateOverride) {
         var _this = this;
         /**
          * override default data file location
@@ -441,6 +486,9 @@ var Calendar = (function () {
         };
         //event listener calendar day button
         this.addOnclick = function (td) {
+            //dont 
+            if (td.classList.contains('dayPast'))
+                return;
             var pointer = _this;
             td.onclick = function () {
                 pointer.form.showForm(td.dataset.date);
@@ -548,6 +596,7 @@ var Calendar = (function () {
             _this.render();
         };
         this.parent = parentElement;
+        this.formPosition = formPosition ? formPosition : null;
         //set default date
         this.baseDate = dateOverride ? dateOverride : new Date();
         this.currentDate = this.baseDate;

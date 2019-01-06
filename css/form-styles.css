@@ -1,3 +1,4 @@
+
 .display-form{
   display : flex;
   flex-direction: column;
@@ -7,6 +8,12 @@
   margin-right : auto;
   border : 1px solid  rgba(0, 0, 255, .2);
   box-shadow: 12px 12px 2px 1px rgba(0, 0, 0, 0.6);
+  cursor: default;
+}
+
+.form-header {
+  text-align: center;
+  padding: 5px;
 }
 
 .form-row {
@@ -34,4 +41,16 @@
   padding: .3em;
   flex: 1;
   text-align: center;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.button-container > button {
+  margin-left: 25px;
+  margin-right: 25px;
 }

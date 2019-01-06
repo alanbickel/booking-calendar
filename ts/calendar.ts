@@ -23,11 +23,18 @@ class Calendar {
   private baseDate : Date;
   //retrieve data from file
   private data : any;
+  //write location
+  private endPoint : string;
 
   private form : FormBuilder;
+  //override default blockUI positioning
+  private formPosition :any;
 
-  constructor(parentElement : HTMLElement, form? : FormControl,   dateOverride ? : Date){
+  constructor(parentElement : HTMLElement, form? : FormControl, formPosition?: any,   dateOverride ? : Date){
     this.parent = parentElement;
+
+    this.formPosition = formPosition ? formPosition : null;
+
     //set default date
     this.baseDate = dateOverride ? dateOverride : new Date();
     this.currentDate = this.baseDate;
@@ -40,6 +47,11 @@ class Calendar {
     //initialize submission form
     let autoLoadStyles = true;
     this.form = new FormBuilder(autoLoadStyles, form);
+    this.form.setEndpoint(this.endPoint);
+  }
+
+  setEndpoint = (url : string) => {
+    this.endPoint = url;
   }
   
   /**
@@ -177,8 +189,6 @@ class Calendar {
       if(!!this.data)
         this.compare(td, this.dateToString(this.currentYear, this.currentMonth, counter));
 
-      
-
       var txt = document.createElement("span");
         txt.innerText = counter.toString();
         td.appendChild(txt);
@@ -206,13 +216,14 @@ class Calendar {
       nextMonthCounter ++;
       weekdays2++;
     }
-
     this.buildTable(tbl_html);
   }
 
   //event listener calendar day button
 
   addOnclick = (td : HTMLElement) =>{
+    //dont 
+    if(td.classList.contains('dayPast')) return;
     var pointer = this;
         td.onclick = function(){
           pointer.form.showForm((<any>td.dataset).date);

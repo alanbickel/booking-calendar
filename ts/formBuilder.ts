@@ -22,7 +22,23 @@ class FormBuilder {
 
   private validationFunctions : ValidationPair[];
 
-  constructor(autoLoadCss: boolean = true, form?:FormControl) {
+  public showForm : Function;
+  /**
+   * override default blockUI positioning?
+   */
+  private formStyling : any;
+
+  /**
+   * url to send request data to 
+   */
+  private endPoint : string;
+
+  constructor(autoLoadCss: boolean = true, form?:FormControl, formStyling? : any) {
+    //modal styles
+    this.formStyling = formStyling ? formStyling : {
+      width : "40vw", 
+      left : "30%"
+    };
 
     if(autoLoadCss){
       let styleLink = document.createElement('link');
@@ -48,12 +64,11 @@ class FormBuilder {
       pointer.showForm = function (date: string) {
 
         let header = document.getElementById('form-header');
-        header.innerText = date;
+        let _date = new Date(date).toDateString();
+        header.innerText = _date;
         $.blockUI({
             message: document.getElementById('input-form'),
-            css: {
-                width: "40wh"
-            }
+            css: this.formStyling
         });
     };
     //onclick handlers added only after blockUI is available
@@ -112,8 +127,10 @@ class FormBuilder {
             validationErrorMessage:"Please enter your email.", 
             placeholder:"enter your email", 
             validation:(value) =>  {
-              let validation = /^[a - zA - Z0-9._ - ] + @[a - zA - Z0-9. - ] + \.[a - zA - Z] {2, 4}$/; 
-              return validation.test(value); 
+             // let validation = /^[a - zA - Z0-9._ - ] + @[a - zA - Z0-9. - ] + \.[a - zA - Z] {2, 4}$/; 
+             // return validation.test(value); 
+              var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+              return re.test(String(value).toLowerCase());
             }
           }
         ], 
@@ -189,12 +206,24 @@ class FormBuilder {
       formChild.appendChild(rowElement);
     }
     document.body.appendChild(form);    
+
+    this.addControlButtons(formChild);
   }
 
   bindFormButtonActions = () => {
+    let pointer = this;
 
     $(document).on('click', '#form-cancel-button', function(){
       $.unblockUI();
+    });
+    $(document).on('click', "#form-submit-button", function(){
+     let validInput =  pointer.validate();
+     let dateString = document.getElementById("form-header").innerText;
+    
+     if(! validInput) return false;
+
+    pointer.submitForm(dateString);
+     
     })
   }
 
@@ -215,16 +244,10 @@ class FormBuilder {
     submitButton.classList.add('form-button');
     submitButton.classList.add('submit-button');
     submitButton.id = "form-submit-button";
-    
-  }
 
-  showForm = (date : string) => {
-    $.blockUI({
-      message : document.getElementById('input-form'), 
-      css : {
-        width : "40wh"
-      }
-    });
+    row.appendChild(cancelButton);
+    row.appendChild(submitButton);
+    formElement.appendChild(row);
   }
 
   createLabel = (id, text):HTMLLabelElement =>  {
@@ -285,11 +308,78 @@ class FormBuilder {
    // element.style.flex = 1;
     return element; 
   }
+
+  validate = () => {
+    let validationPool = this.validationFunctions;
+    let result = false;
+    for(let i = 0; i < this.validationFunctions.length; i++){
+      let validation = this.validationFunctions[i];
+      let inputValue = (<HTMLInputElement>document.getElementById(validation.elementId)).value;
+
+      if(!validation.function(inputValue)){
+        let message = validation.failMessage;
+        var header = document.getElementById("form-header");
+        var dateString = header.innerText;
+        header.innerText = message;
+        setTimeout(function(){
+          header.innerText = dateString;
+        }, 2000);
+
+        return false;
+      }
+    }
+    return true;
+  }
+
+  submitForm = (date: string) => {
+    let pointer = this;
+    let rows =  this.defaultForm['rows'];
+    let payload: any = {};
+
+    payload.date = date;
+
+    for(let i = 0; i  < rows.length; i++){
+      let row = rows[i];
+
+      for(let j = 0; j < row.length; j++){
+        let node = row[j];
+        let propName = node.name;
+        let element = document.getElementById(node.id);
+        payload[propName] = (<any>element).value;
+      }
+
+      $.ajax({
+        url : this.endPoint, 
+        method:  "POST",
+        data  : payload, 
+        dataType : "JSON"
+      })
+      .done(response => {
+
+      })
+      .fail(xhr => {
+        //unable to reach server
+        console.log('XHR failure: ', xhr);
+        $.blockUI({message : "Unable to connect to server.  ", timeout : 2000});
+      })
+    }
+
+    /**
+     * TODO ajax request do write to .dat
+     */
+    
+     debugger;
+  }
+
+  setEndpoint = (url :string) => {
+    this.endPoint = url;
+  }
 }
 
 interface ValidationPair {
   function : Function;
   failMessage: string;
+
   elementId : string;
 }
 

@@ -49,8 +49,4 @@ $mail->isHTML(true);
 //return a response status to the client
 $response['success'] = $mail->send() ? 200 : 500 ;
 
-
-
-
-
 ?>
