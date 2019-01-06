@@ -19,56 +19,46 @@ class FormBuilder {
    */
 
   private defaultForm:FormControl; 
-
   private validationFunctions : ValidationPair[];
-
   public showForm : Function;
-  /**
-   * override default blockUI positioning?
-   */
-  private formStyling : any;
-
-  /**
-   * url to send request data to 
-   */
+  //override default blockUI positioning
+  private modalContainerStyling : any;
+  //where to send request
   private endPoint : string;
+  //custom response messages
+  private successMessage:string;
+  private failureMessage  : string;
 
-  constructor(autoLoadCss: boolean = true, form?:FormControl, formStyling? : any) {
+  private parent : Calendar;
+
+  constructor(parent : Calendar, blockUIpath : string,  form?:FormControl, modalContainerStyling? : any) {
+    this.parent = parent;
     //modal styles
-    this.formStyling = formStyling ? formStyling : {
-      width : "40vw", 
-      left : "30%"
-    };
-
-    if(autoLoadCss){
-      let styleLink = document.createElement('link');
-      styleLink.id = "auto-load-form-styles";
-      styleLink.rel = "stylesheet";
-      styleLink.href = "./css/form-styles.css";
-      document.body.appendChild(styleLink);
-    }
-
-    /**
-     * auto-load blockui deps
-     */
-    let blockUIscript = document.createElement('script');
-    blockUIscript.src = "./vendor/js/malsup/blockui.js";
-    let pointer = this;
+    this.modalContainerStyling = modalContainerStyling ? modalContainerStyling : {width : "40vw",left : "30%"};
+    //set default messages
+    this.successMessage = "<h4>Your request has been sent.  Thank you!</h4>";
+    this.failureMessage = "<h4>Unable to send your request.\nPlease try again later.</h4>";
     /**
      * bind click events for form 'submit' and 'cancel' buttons
-     * once deendency has loaded
+     * once dependency has loaded
      */
+    let blockUIscript = document.createElement('script');
+    blockUIscript.src = blockUIpath;
+    let pointer = this;
     blockUIscript.onload = function(){
 
-      //define function that calls blockUI only when it is available & loaded
+      //define function that calls blockUI only when blockui is available & loaded
       pointer.showForm = function (date: string) {
-
+        let parts = date.split("-");
+        let dateString = parts[1]+"/"+parts[2]+"/"+parts[0];
         let header = document.getElementById('form-header');
-        let _date = new Date(date).toDateString();
-        header.innerText = _date;
+        //store server-formatted date
+        header.dataset.date = date;
+          
+        header.innerText = dateString;
         $.blockUI({
             message: document.getElementById('input-form'),
-            css: this.formStyling
+            css: this.modalContainerStyling
         });
     };
     //onclick handlers added only after blockUI is available
@@ -152,6 +142,13 @@ class FormBuilder {
     this.buildForm(); 
   }
 
+  loadStyleSheet = (path: string) : void => {
+    let styleLink = document.createElement('link');
+    styleLink.rel = "stylesheet";
+    styleLink.href = path;
+    document.body.appendChild(styleLink);
+  }
+
   buildForm = () =>  {
     let form = document.createElement('div'); 
     
@@ -213,7 +210,7 @@ class FormBuilder {
    * add | change styling for default blockUI container
    */
   updateContainerStyle = (stlye : any) => {
-    this.formStyling = stlye;
+    this.modalContainerStyling = stlye;
   }
 
   bindFormButtonActions = () => {
@@ -224,7 +221,7 @@ class FormBuilder {
     });
     $(document).on('click', "#form-submit-button", function(){
      let validInput =  pointer.validate();
-     let dateString = document.getElementById("form-header").innerText;
+     let dateString = document.getElementById("form-header").dataset.date;
     
      if(! validInput) return false;
 
@@ -337,6 +334,14 @@ class FormBuilder {
     return true;
   }
 
+  setResponseMessage = (status : string, message : string): void => {
+
+    if(status == 'success')
+      this.successMessage = message;
+    if(status == 'failure')
+      this.failureMessage = message;
+  }
+
   submitForm = (date: string) => {
     let pointer = this;
     let rows =  this.defaultForm['rows'];
@@ -355,38 +360,36 @@ class FormBuilder {
       }
     }
 
-      console.log('request uri: ', this.endPoint);
-      console.log('request payload: ', payload);
+    $.unblockUI();
+    $.blockUI({
+      message : "Sending your request.  Just a moment..."
+    });
 
-      $.unblockUI();
-      $.blockUI({
-        message : "Sending your request.  Just a moment..."
-      });
+    $.ajax({
+      url : this.endPoint, 
+      method:  "POST",
+      data  : payload, 
+      dataType : "JSON"
+    })
+    .done(response => {
 
-      $.ajax({
-        url : this.endPoint, 
-        method:  "POST",
-        data  : payload, 
-        dataType : "JSON"
-      })
-      .done(response => {
+      if(response && response.status == 200){
 
-        console.log(response);
-
-        if(response && response.status == 200){
-          $.unblockUI();
-          $.blockUI({
-            message : "<h4>Your request has been sent.  Thank you for your inquiry!</h4>", 
-            timeout : 2500
-          });
-        }
-        else {
-          $.unblockUI();
-          $.blockUI({
-            message : "<h4>Sorry, our request service is temporarily unavailable.</h4>", 
-            timeout : 2500
-          });
-        }
+        $.unblockUI();
+        $.blockUI({
+          message : pointer.successMessage, 
+          timeout : 2500
+        });
+        //refresh data set & redraw calendar
+        pointer.parent.getData();
+        ;      }
+      else {
+        $.unblockUI();
+        $.blockUI({
+          message : pointer.failureMessage, 
+          timeout : 2500
+        });
+      }
 
       })
       .fail(xhr => {
