@@ -1,0 +1,20 @@
+ {
+  "rows":[
+    [ {
+        "id":"date-status", 
+        "name":"date-status", 
+        "type":"select", 
+        "label": "Status", 
+        "defaultOption" : {
+          "text":"Select Status", 
+          "value":"default"
+        }, 
+        "opts" : [
+          {"text" : "Available", "value" : "available"}, 
+          {"text" : "Booked", "value" : "booked"},
+          {"text" : "Unavailable", "value" : "unavailable"}
+        ]
+      }
+    ]
+  ]
+}
