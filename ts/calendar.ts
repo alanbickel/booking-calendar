@@ -47,11 +47,12 @@ class Calendar {
     //initialize submission form
     let autoLoadStyles = true;
     this.form = new FormBuilder(autoLoadStyles, form);
-    this.form.setEndpoint(this.endPoint);
+    
   }
 
   setEndpoint = (url : string) => {
     this.endPoint = url;
+    this.form.setEndpoint(this.endPoint);
   }
   
   /**
