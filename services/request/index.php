@@ -1,52 +1,78 @@
 <?php
-/**
- * Request from client for event booking - 
- */
+/*Request from client for event booking*/
 
 
- /**
-  * Shout out to ~ Narayan Prusty   for sitepoint phpmailer setup article
-  https://www.sitepoint.com/sending-emails-php-phpmailer/
-  */
+ /** https://github.com/PHPMailer/PHPMailer*/
 
-require_once "../vendor/vendor/autoload.php";
+  use PHPMailer\PHPMailer\PHPMailer;
+  use PHPMailer\PHPMailer\Exception;
 
-/**
- * use external SMTP mail server - no local mail server 
- */
+require_once "../../vendor/autoload.php";
 
-$mail = new PHPMailer;
-$mail->SMTPDebug = 3;                     
-$mail->isSMTP();            
-$mail->Host = "smtp.gmail.com";
-$mail->SMTPAuth = true;                          
+/*define path to .env for email creds - keep outside of server document root*/
+/*https://github.com/vlucas/phpdotenv */
+$dotenv = Dotenv\Dotenv::create($_SERVER['DOCUMENT_ROOT']."/../event-calendar-env/");
+$dotenv->load();
 
-/**
- * Your credentials here - this account is where  email will be sent from
- */
-$mail->Username = "alan.bickel@gmail.com";                 
-$mail->Password = "m3tall1ca"; 
-//If SMTP requires TLS encryption then set it
-$mail->SMTPSecure = "tls";                           
-//Set TCP port to connect to 
-$mail->Port = 587;
+$MAILER_USER = $_ENV['MAILER_USER'];
+$MAILER_PASS = $_ENV['MAILER_PASS'];
+$MAILER_SMTP_HOST = $_ENV['MAILER_SMTP_HOST'];
 
-/**
- * This is the 'from' address that you will see when you recieve automated message.
- */
-$mail->From = $mail->Username;
+$response;
 
-$mail->FromName = "Automated Request Email";
+$mail = new PHPMailer(true);                                          //Passing `true` enables exceptions
+try {
+    //Server settings
+    $mail->SMTPDebug = 0;//2;                                         //debug                                 
+    $mail->isSMTP();                                                  // Set mailer to use SMTP
 
-/**
- * This is the target email address - the email account to recieve the request
- */
-$mail->addAddress("name@example.com", "Recepient Name");
+    /**
+     * SPECIFY YOUR MAIL SERVER HERE
+     */
+    $mail->Host = $MAILER_SMTP_HOST;                                  //primary [; backup] smpt hosts
+    $mail->SMTPAuth = true;                                           // Enable SMTP authentication
+    //pass creds
+    $mail->Username = $MAILER_USER;                                   // SMTP username
+    $mail->Password = $MAILER_PASS;                                   // SMTP password
+    //use SSL 
+    $mail->SMTPSecure = 'ssl';                                        // Enable TLS encryption, `ssl` also accepted
+    $mail->Port = 465;                                                // TCP port 465 for 'ssl', 587 for 'tls'
+    //'return' address
+    $mail->setFrom($MAILER_USER, 'Automated Event Request');
 
-//dis|en able HTML messages
-$mail->isHTML(true);
+    //DESTINATION
+    $mail->addAddress('event.calendar.test.project@gmail.com', 'Automated Web Request');
 
-//return a response status to the client
-$response['success'] = $mail->send() ? 200 : 500 ;
+    //Content
+    $mail->isHTML(true);                                  
+    //add form content to email body
+    if(isset($_POST) && !empty($_POST)){
 
+      $message = "\n";
+
+      foreach($_POST as $key => $val){
+
+        $str = filter_input(INPUT_POST, $key, FILTER_SANITIZE_STRING);
+
+        $message.= "$key => $str<br />";
+      }
+
+      //append request timestamp
+      $today = date("F j, Y, g:i a");                 
+      $message .= "<br><br>Request Sent => ".$today;
+
+      $mail->Subject = 'Automated Web Request';
+      $mail->Body    = $message;
+      $mail->AltBody = $message;
+    }
+
+    $mail->send();
+    $response['status'] = 200;
+    
+} catch (Exception $e) {
+  $response['status'] = 500;
+  $response['message'] = $e->getMessage();
+}
+echo json_encode($response);
 ?>
+
