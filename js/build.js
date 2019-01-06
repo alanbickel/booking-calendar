@@ -46,9 +46,14 @@ var daysPerMonth = [
 ///<reference path= "./formTemplates.ts" />
 ///<reference path= "../Types/jQuery/blockui.d.ts" />
 var FormBuilder = (function () {
-    function FormBuilder(autoLoadCss, form, formStyling) {
+    function FormBuilder(parent, blockUIpath, form, modalContainerStyling) {
         var _this = this;
-        if (autoLoadCss === void 0) { autoLoadCss = true; }
+        this.loadStyleSheet = function (path) {
+            var styleLink = document.createElement('link');
+            styleLink.rel = "stylesheet";
+            styleLink.href = path;
+            document.body.appendChild(styleLink);
+        };
         this.buildForm = function () {
             var form = document.createElement('div');
             form.style.display = "none";
@@ -94,6 +99,12 @@ var FormBuilder = (function () {
             document.body.appendChild(form);
             _this.addControlButtons(formChild);
         };
+        /**
+         * add | change styling for default blockUI container
+         */
+        this.updateContainerStyle = function (stlye) {
+            _this.modalContainerStyling = stlye;
+        };
         this.bindFormButtonActions = function () {
             var pointer = _this;
             $(document).on('click', '#form-cancel-button', function () {
@@ -101,8 +112,10 @@ var FormBuilder = (function () {
             });
             $(document).on('click', "#form-submit-button", function () {
                 var validInput = pointer.validate();
-                if (validInput)
-                    pointer.submitForm();
+                var dateString = document.getElementById("form-header").dataset.date;
+                if (!validInput)
+                    return false;
+                pointer.submitForm(dateString);
             });
         };
         this.addControlButtons = function (formElement) {
@@ -194,10 +207,17 @@ var FormBuilder = (function () {
             }
             return true;
         };
-        this.submitForm = function () {
+        this.setResponseMessage = function (status, message) {
+            if (status == 'success')
+                _this.successMessage = message;
+            if (status == 'failure')
+                _this.failureMessage = message;
+        };
+        this.submitForm = function (date) {
             var pointer = _this;
             var rows = _this.defaultForm['rows'];
             var payload = {};
+            payload.date = date;
             for (var i = 0; i < rows.length; i++) {
                 var row = rows[i];
                 for (var j = 0; j < row.length; j++) {
@@ -207,42 +227,72 @@ var FormBuilder = (function () {
                     payload[propName] = element.value;
                 }
             }
-            /**
-             * TODO ajax request do write to .dat
-             */
-            debugger;
+            $.unblockUI();
+            $.blockUI({
+                message: "Sending your request.  Just a moment..."
+            });
+            $.ajax({
+                url: _this.endPoint,
+                method: "POST",
+                data: payload,
+                dataType: "JSON"
+            })
+                .done(function (response) {
+                if (response && response.status == 200) {
+                    $.unblockUI();
+                    $.blockUI({
+                        message: pointer.successMessage,
+                        timeout: 2500
+                    });
+                    //refresh data set & redraw calendar
+                    pointer.parent.getData();
+                    ;
+                }
+                else {
+                    $.unblockUI();
+                    $.blockUI({
+                        message: pointer.failureMessage,
+                        timeout: 2500
+                    });
+                }
+            })
+                .fail(function (xhr) {
+                //unable to reach server
+                console.log('XHR failure: ', xhr);
+                $.blockUI({
+                    message: "<h4>Unable to connect to server.</h4>",
+                    timeout: 2000
+                });
+            });
         };
+        this.setEndpoint = function (url) {
+            _this.endPoint = url;
+        };
+        this.parent = parent;
         //modal styles
-        this.formStyling = formStyling ? formStyling : {
-            width: "40vw",
-            left: "30%"
-        };
-        if (autoLoadCss) {
-            var styleLink = document.createElement('link');
-            styleLink.id = "auto-load-form-styles";
-            styleLink.rel = "stylesheet";
-            styleLink.href = "./css/form-styles.css";
-            document.body.appendChild(styleLink);
-        }
-        /**
-         * auto-load blockui deps
-         */
-        var blockUIscript = document.createElement('script');
-        blockUIscript.src = "./vendor/js/malsup/blockui.js";
-        var pointer = this;
+        this.modalContainerStyling = modalContainerStyling ? modalContainerStyling : { width: "40vw", left: "30%" };
+        //set default messages
+        this.successMessage = "<h4>Your request has been sent.  Thank you!</h4>";
+        this.failureMessage = "<h4>Unable to send your request.\nPlease try again later.</h4>";
         /**
          * bind click events for form 'submit' and 'cancel' buttons
-         * once deendency has loaded
+         * once dependency has loaded
          */
+        var blockUIscript = document.createElement('script');
+        blockUIscript.src = blockUIpath;
+        var pointer = this;
         blockUIscript.onload = function () {
-            //define function that calls blockUI only when it is available & loaded
+            //define function that calls blockUI only when blockui is available & loaded
             pointer.showForm = function (date) {
+                var parts = date.split("-");
+                var dateString = parts[1] + "/" + parts[2] + "/" + parts[0];
                 var header = document.getElementById('form-header');
-                var _date = new Date(date).toDateString();
-                header.innerText = _date;
+                //store server-formatted date
+                header.dataset.date = date;
+                header.innerText = dateString;
                 $.blockUI({
                     message: document.getElementById('input-form'),
-                    css: this.formStyling
+                    css: this.modalContainerStyling
                 });
             };
             //onclick handlers added only after blockUI is available
@@ -327,23 +377,56 @@ var FormBuilder = (function () {
 ///<reference path="./formBuilder.ts" />
 ///<reference path="../Types/jQuery/jquery.d.ts"/>
 /**
- * TODO
- * ~implement default auto-load css
+ * TODO :
+ * clean up render()
+ * clean up buildHeader()
+ * clean up addNav()
  */
 var Calendar = (function () {
-    function Calendar(parentElement, form, formPosition, dateOverride) {
+    function Calendar(parentElement, dateOverride) {
         var _this = this;
+        //toggle show | hide color key for table
+        this.displayLegend = function (state) {
+            _this.showLegend = state;
+        };
+        //set style location for form 
+        this.loadFormStyles = function (stylePath) {
+            _this.form.loadStyleSheet(stylePath);
+        };
+        //set style location for calendar
+        this.loadSelfStyles = function (stylePath) {
+            var styleLink = document.createElement('link');
+            styleLink.rel = "stylesheet";
+            styleLink.href = stylePath;
+            document.body.appendChild(styleLink);
+        };
+        //set message to display on request return  from server
         /**
-         * override default data file location
+         * @param status - 'success | failure ' - custom messaging for either response
+         * @param message - text | HTML to display
          */
+        this.setRequestCompleteMessage = function (status, message) {
+            _this.form.setResponseMessage(status, message);
+        };
+        //build user input form
+        this.createModal = function (blockUIpath, formData, formContainerStyles) {
+            _this.form = new FormBuilder(_this, blockUIpath, formData, formContainerStyles);
+        };
+        //adjust css of modal form
+        this.updateFormPositioning = function (formContainerStyles) {
+            _this.form.updateContainerStyle(formContainerStyles);
+        };
+        //point form submit to server
+        this.setEndpoint = function (url) {
+            _this.form.setEndpoint(url);
+        };
+        //add | change data file location
         this.setDriverLocation = function (driverLocation) {
             _this.driverLocation = driverLocation;
         };
+        //retrieve data
         this.getData = function () {
             var pointer = _this;
-            if (!_this.driverLocation) {
-                throw new Error('data source location must be set via calendar.setDriverLocation(url).');
-            }
             $.ajax({
                 url: _this.driverLocation,
                 dataType: "text"
@@ -359,69 +442,69 @@ var Calendar = (function () {
                 pointer.data = e;
                 pointer.render();
             })
-                .fail(function (xhr) {
-                console.log('data lookup failure: ', xhr);
-            });
+                .fail(function (xhr) { console.log('data lookup failure: ', xhr); });
         };
-        /**
-         * step forward | back a month
-         */
+        //get adjacent month/year
         this.getSibling = function (movement) {
             var response = {
                 month: _this.currentMonth,
                 year: _this.currentYear
             };
-            switch (movement) {
-                case "next": {
-                    if (_this.currentMonth < 11) {
-                        response.month++;
-                    }
-                    else {
-                        response.month = 0;
-                        response.year++;
-                    }
-                    break;
+            if (movement == 'next') {
+                if (_this.currentMonth < 11)
+                    response.month++;
+                else {
+                    response.month = 0;
+                    response.year++;
                 }
-                case "prev": {
-                    if (_this.currentMonth > 0)
-                        response.month--;
-                    else {
-                        response.month = 11;
-                        response.year--;
-                    }
+            }
+            if (movement == 'prev') {
+                if (_this.currentMonth > 0)
+                    response.month--;
+                else {
+                    response.month = 11;
+                    response.year--;
                 }
             }
             return response;
         };
-        /**
-         * build calendar table
-         */
+        //construct DOM table body
         this.render = function () {
             _this.parent.innerHTML = "";
             var tbl_html = document.createDocumentFragment();
-            var html = document.createDocumentFragment();
-            var feb_num_days = "";
             var counter = 1;
-            var dateNow = null;
             var daysInThisMonth = _this.daysInMonth(_this.currentYear, _this.currentMonth);
             var prev = _this.getSibling('prev');
             var next = _this.getSibling('next');
             var daysInPreviousMonth = _this.daysInMonth(prev.year, prev.month);
-            var daysInNextMonth = _this.daysInMonth(next.year, next.month);
-            var weekdays = _this.currentDate.getDay();
+            //get first day of this month
+            var firstDay = new Date(_this.currentDate.getFullYear(), _this.currentDate.getMonth(), 1);
+            var weekdays = firstDay.getDay();
             var weekdays2 = weekdays;
+            //define current point in time
+            var yearInPast = _this.currentYear < _this.baseYear;
+            var yearInPresent = _this.currentYear == _this.baseYear;
+            var yearInFuture = _this.currentYear > _this.baseYear;
+            var monthInPast = yearInPast || (yearInPresent && _this.currentMonth < _this.baseMonth);
+            var monthInPresent = yearInPresent && _this.currentMonth == _this.baseMonth;
+            var monthInFuture = (yearInFuture || (yearInPresent && _this.currentMonth > _this.baseMonth));
             //begin DOM construction
             var tr = document.createElement("tr");
             tbl_html.appendChild(tr);
             //add trailing days of last month
             while (weekdays > 0) {
+                var dayIsInPast = monthInPast || monthInPresent;
                 var trailingDayNumber = (daysInPreviousMonth - (weekdays - 1));
                 var td_1 = document.createElement('td');
                 td_1.innerText = trailingDayNumber.toString();
-                td_1.classList.add("monthPre");
-                td_1.classList.add("dayPast");
+                if (dayIsInPast) {
+                    td_1.classList.add("monthPre");
+                    td_1.classList.add("dayPast");
+                }
                 td_1.classList.add("day");
                 tr.appendChild(td_1);
+                var isTrailingSunday = weekdays == weekdays2;
+                _this.compare(td_1, _this.dateToString(prev.year, prev.month, counter), isTrailingSunday ? 0 : 1);
                 weekdays--;
             }
             //build calendar body
@@ -435,17 +518,14 @@ var Calendar = (function () {
                 //create element for each day
                 var td_2 = document.createElement('td');
                 td_2.classList.add("day");
-                td_2.classList.add("day-current-month");
-                //in the past?
-                var yearInPast = _this.currentYear < _this.baseYear;
-                var yearInPresent = _this.currentYear == _this.baseYear;
-                var yearInFuture = _this.currentYear > _this.baseYear;
-                var monthInPast = (yearInPast || yearInPresent) && _this.currentMonth < _this.baseMonth;
-                var monthInPresent = yearInPresent && _this.currentMonth == _this.baseMonth;
-                var monthInFuture = (yearInFuture || yearInPresent && _this.currentMonth > _this.baseMonth);
-                if (yearInPast || monthInPast || (monthInPresent && _this.currentDate.getDate() < _this.baseDate.getDate()))
+                //is today?
+                if (yearInPresent && monthInPresent && counter == _this.currentDate.getDate())
+                    td_2.classList.add('today');
+                if (monthInFuture)
+                    td_2.classList.remove('monthPre');
+                if (yearInPast || monthInPast || (monthInPresent && counter < _this.baseDate.getDate()))
                     td_2.classList.add("dayPast");
-                if (monthInPresent && (_this.currentDate.getDate() == _this.baseDate.getDate()))
+                if (monthInPresent && (counter == _this.baseDate.getDate()))
                     td_2.classList.add("dayNow");
                 if (monthInFuture || monthInPresent && _this.currentDate.getDate() > _this.baseDate.getDate())
                     td_2.classList.add("dayFuture");
@@ -455,7 +535,7 @@ var Calendar = (function () {
                 _this.addOnclick(td_2);
                 //check against datastore for date matches
                 if (!!_this.data)
-                    _this.compare(td_2, _this.dateToString(_this.currentYear, _this.currentMonth, counter));
+                    _this.compare(td_2, _this.dateToString(_this.currentYear, _this.currentMonth, counter), weekdays2);
                 var txt = document.createElement("span");
                 txt.innerText = counter.toString();
                 td_2.appendChild(txt);
@@ -477,37 +557,72 @@ var Calendar = (function () {
                 td.dataset.date = nextMonthDate;
                 td.appendChild(txt);
                 tr.appendChild(td);
+                //check against datastore for date matches
+                if (!!_this.data)
+                    _this.compare(td, nextMonthDate, weekdays2);
                 //add click handler for form display
                 _this.addOnclick(td);
                 nextMonthCounter++;
                 weekdays2++;
             }
             _this.buildTable(tbl_html);
+            if (_this.showLegend)
+                _this.buildLegend();
         };
-        //event listener calendar day button
+        this.buildLegend = function () {
+            var states = [
+                { state: 'available', text: "Available" },
+                { state: 'booked', text: "Booked" },
+                { state: 'pending', text: "Pending" },
+                { state: "unavailable", text: "Unavailable" }
+            ];
+            var legend = document.createElement('div');
+            legend.classList.add('key-container');
+            legend.id = "legend-container";
+            legend.style.width = document.getElementById('calendar-table').getBoundingClientRect().width + "px";
+            for (var i = 0; i < states.length; i++) {
+                var record = states[i];
+                var elem = document.createElement('div');
+                elem.classList.add('key-pair-container');
+                var text = document.createElement('div');
+                text.classList.add('key-text');
+                text.innerText = record.text;
+                var state = document.createElement('div');
+                state.classList.add(record.state);
+                state.classList.add('key-color-box');
+                elem.appendChild(text);
+                elem.appendChild(state);
+                legend.appendChild(elem);
+            }
+            _this.parent.appendChild(legend);
+        };
+        //event listener for calendar day button
         this.addOnclick = function (td) {
-            //dont 
-            if (td.classList.contains('dayPast'))
-                return;
-            var pointer = _this;
-            td.onclick = function () {
-                pointer.form.showForm(td.dataset.date);
-            };
+            if (!td.classList.contains('dayPast')) {
+                var pointer = _this;
+                td.onclick = function () {
+                    pointer.form.showForm(td.dataset.date);
+                };
+            }
         };
-        /**
-         * check current td's date against known events
-         */
-        this.compare = function (td, dateString) {
+        //mark known events
+        this.compare = function (td, dateString, dayOfWeek) {
+            //strip weekend availability?
+            if (!_this.availableOnWeekends && (dayOfWeek == 6 || dayOfWeek == 0)) {
+                td.classList.remove('available');
+                td.classList.add('unavailable');
+            }
             for (var i = 0; i < _this.data.length; i++) {
                 var date = _this.data[i];
                 //update element classlist on date match
                 if (date.string == dateString) {
-                    //let iconClasses = date.glyphicon;
-                    var status_1 = date.status;
-                    td.classList.add(status_1);
+                    td.classList.add(date.status);
+                    if (td.classList.contains('unavailable') && date.status != 'unavailable')
+                        td.classList.remove('unavailable');
                 }
             }
         };
+        //construct DOM table head
         this.buildHeader = function (table) {
             var header = document.createElement('thead');
             var hr = document.createElement('tr');
@@ -533,14 +648,16 @@ var Calendar = (function () {
             header.appendChild(dayRow);
             table.appendChild(header);
         };
+        //wrapper for firing DOM construct functions
         this.buildTable = function (bodyContent) {
             var table = document.createElement('table');
             table.classList.add('calendar');
             table.id = "calendar-table";
             _this.buildHeader(table);
             table.appendChild(bodyContent);
+            _this.parent.innerHTML = "";
             _this.parent.appendChild(table);
-            //add day of week bar
+            //navigation
             _this.addNav();
         };
         this.dateToString = function (y, m, d) {
@@ -587,6 +704,7 @@ var Calendar = (function () {
             header.insertBefore(navLeft, header.firstChild);
             header.appendChild(navRight);
         };
+        //redraw table
         this.update = function (isRightClick) {
             var key = isRightClick ? "next" : "prev";
             var adj = _this.getSibling(key);
@@ -595,8 +713,10 @@ var Calendar = (function () {
             _this.currentDate = new Date(_this.currentYear, _this.currentMonth);
             _this.render();
         };
+        //DOM target
         this.parent = parentElement;
-        this.formPosition = formPosition ? formPosition : null;
+        //default to display color key
+        this.showLegend = true;
         //set default date
         this.baseDate = dateOverride ? dateOverride : new Date();
         this.currentDate = this.baseDate;
@@ -606,9 +726,8 @@ var Calendar = (function () {
         //year
         this.baseYear = this.baseDate.getFullYear();
         this.currentYear = this.baseYear;
-        //initialize submission form
-        var autoLoadStyles = true;
-        this.form = new FormBuilder(autoLoadStyles, form);
+        //default weekend availability
+        this.availableOnWeekends = false;
     }
     return Calendar;
 })();
