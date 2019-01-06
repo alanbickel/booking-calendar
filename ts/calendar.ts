@@ -15,6 +15,8 @@ class Calendar {
   //location of data file
   private driverLocation:  string;
   private data : any;
+  //weekend availability
+  private availableOnWeekends: boolean;
   //date component values
   private currentYear : number;
   private baseYear : number;
@@ -24,10 +26,14 @@ class Calendar {
   private baseDate : Date;
   //manage modal input form
   private form : FormBuilder;
+  //display key below table?
+  private showLegend: boolean;
 
   constructor(parentElement : HTMLElement, dateOverride ? : Date){
     //DOM target
     this.parent = parentElement;
+    //default to display color key
+    this.showLegend = true;
     //set default date
     this.baseDate = dateOverride ? dateOverride : new Date();
     this.currentDate = this.baseDate;
@@ -36,11 +42,39 @@ class Calendar {
     this.currentMonth = this.baseMonth;
     //year
     this.baseYear = this.baseDate.getFullYear();
-    this.currentYear = this.baseYear;    
+    this.currentYear = this.baseYear;   
+    //default weekend availability
+    this.availableOnWeekends = false; 
   }
+  //toggle show | hide color key for table
+  displayLegend = (state : boolean) => {
+    this.showLegend = state;
+  }
+
+  //set style location for form 
+  loadFormStyles = (stylePath : string): void => {
+    this.form.loadStyleSheet(stylePath);
+  }
+  //set style location for calendar
+  loadSelfStyles = (stylePath :string) : void => {
+    let styleLink = document.createElement('link');
+    styleLink.rel = "stylesheet";
+    styleLink.href = stylePath;
+    document.body.appendChild(styleLink);
+  }
+  //set message to display on request return  from server
+  /**
+   * @param status - 'success | failure ' - custom messaging for either response 
+   * @param message - text | HTML to display
+   */
+  setRequestCompleteMessage = (status : string, message :string) : void => {
+    this.form.setResponseMessage(status, message);
+  }
+
+
   //build user input form
-  createModal = (autoLoadStyles? : boolean, formData ?: FormControl, formContainerStyles? : any ): void => {
-    this.form = new FormBuilder(autoLoadStyles, formData, formContainerStyles);
+  createModal = (blockUIpath : string,  formData ?: FormControl, formContainerStyles? : any ): void => {
+    this.form = new FormBuilder(this, blockUIpath, formData, formContainerStyles);
   }
   //adjust css of modal form
   updateFormPositioning = (formContainerStyles : any): void => {
@@ -80,11 +114,22 @@ class Calendar {
       year : this.currentYear
     }
 
-    if(movement == 'next')
-      this.currentMonth < 11 ? (response.month++) : (response.month = 0, response.year++);
-    if(movement == 'prev')
-      this.currentMonth > 0 ?  (response.month --) : (response.month = 11, response.year--)
-
+    if(movement == 'next'){
+      if(this.currentMonth < 11)
+        response.month++
+      else {
+        response.month = 0;
+         response.year++;
+      }
+    }
+    if(movement == 'prev'){
+      if(this.currentMonth > 0)
+        response.month --;
+      else {
+        response.month = 11;
+        response.year--;
+      }
+    }
     return response;
   }
   //construct DOM table body
@@ -92,34 +137,42 @@ class Calendar {
     this.parent.innerHTML = "";
 
     let tbl_html = document.createDocumentFragment();
-    let html = document.createDocumentFragment();
-    let feb_num_days = "";
     let counter = 1;
-    let dateNow = null;
 
     let daysInThisMonth = this.daysInMonth(this.currentYear, this.currentMonth);
     let prev = this.getSibling('prev');
     let next = this.getSibling('next');
-
     let daysInPreviousMonth = this.daysInMonth(prev.year, prev.month);
-    let daysInNextMonth = this.daysInMonth(next.year, next.month);
-
-    let weekdays = this.currentDate.getDay();
+    //get first day of this month
+    let firstDay = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
+    let weekdays = firstDay.getDay();
     let weekdays2 = weekdays;
-
+    //define current point in time
+    let yearInPast = this.currentYear < this.baseYear;
+    let yearInPresent = this.currentYear == this.baseYear;
+    let yearInFuture = this.currentYear > this.baseYear;
+    let monthInPast = yearInPast || (yearInPresent && this.currentMonth < this.baseMonth);
+    let monthInPresent = yearInPresent && this.currentMonth == this.baseMonth;
+    let monthInFuture = (yearInFuture || (yearInPresent && this.currentMonth >  this.baseMonth));
 
     //begin DOM construction
     let tr = document.createElement("tr");
     tbl_html.appendChild(tr);
     //add trailing days of last month
     while(weekdays > 0){
+      let dayIsInPast = monthInPast || monthInPresent;
       let trailingDayNumber = (daysInPreviousMonth - (weekdays -1));
       let td = document.createElement('td');
       td.innerText = trailingDayNumber.toString();
-      td.classList.add("monthPre");
-      td.classList.add("dayPast");
+      if(dayIsInPast){
+        td.classList.add("monthPre");
+        td.classList.add("dayPast");
+      }
+     
       td.classList.add("day");
       tr.appendChild(td);
+      let isTrailingSunday = weekdays == weekdays2;
+      this.compare(td, this.dateToString(prev.year, prev.month, counter), isTrailingSunday ? 0 : 1);
       weekdays--;
     }
     //build calendar body
@@ -133,18 +186,18 @@ class Calendar {
       //create element for each day
       let td = <HTMLElement>document.createElement('td');
       td.classList.add("day");
-      td.classList.add("day-current-month");
-      //in the past?
-      let yearInPast = this.currentYear < this.baseYear;
-      let yearInPresent = this.currentYear == this.baseYear;
-      let yearInFuture = this.currentYear > this.baseYear;
-      let monthInPast = (yearInPast || yearInPresent) && this.currentMonth < this.baseMonth;
-      let monthInPresent = yearInPresent && this.currentMonth == this.baseMonth;
-      let monthInFuture = (yearInFuture || yearInPresent && this.currentMonth >  this.baseMonth);
+      
+      //is today?
+      if(yearInPresent && monthInPresent && counter == this.currentDate.getDate())
+        td.classList.add('today');
+      
 
-      if(yearInPast || monthInPast || (monthInPresent && this.currentDate.getDate() < this.baseDate.getDate()))  
+      if(monthInFuture)
+        td.classList.remove('monthPre');
+
+      if(yearInPast || monthInPast || (monthInPresent && counter < this.baseDate.getDate()))  
         td.classList.add("dayPast");
-      if(monthInPresent && (this.currentDate.getDate() == this.baseDate.getDate()) )
+      if(monthInPresent && (counter == this.baseDate.getDate()) )
         td.classList.add("dayNow");
       if(monthInFuture || monthInPresent && this.currentDate.getDate() > this.baseDate.getDate())
       td.classList.add("dayFuture");
@@ -156,7 +209,7 @@ class Calendar {
 
       //check against datastore for date matches
       if(!!this.data)
-        this.compare(td, this.dateToString(this.currentYear, this.currentMonth, counter));
+        this.compare(td, this.dateToString(this.currentYear, this.currentMonth, counter), weekdays2);
 
       var txt = document.createElement("span");
         txt.innerText = counter.toString();
@@ -180,12 +233,48 @@ class Calendar {
       (<any>td.dataset).date = nextMonthDate;
       td.appendChild(txt);
       tr.appendChild(td);
+      //check against datastore for date matches
+      if(!!this.data)
+        this.compare(td, nextMonthDate, weekdays2);
       //add click handler for form display
       this.addOnclick(td);
       nextMonthCounter ++;
       weekdays2++;
     }
     this.buildTable(tbl_html);
+    
+    if(this.showLegend) this.buildLegend();
+  }
+
+  buildLegend = () => {
+    let states = [
+      { state: 'available', text :"Available"},
+      { state: 'booked' , text :"Booked"},
+      { state: 'pending' , text :"Pending"},
+      { state: "unavailable", text :"Unavailable"}
+    ]
+    let legend = document.createElement('div');
+    legend.classList.add('key-container');
+    legend.id = "legend-container";
+
+    legend.style.width = document.getElementById('calendar-table').getBoundingClientRect().width+ "px";
+
+    for(let i = 0; i  < states.length; i++){
+      let record = states[i];
+      let elem = document.createElement('div');
+      elem.classList.add('key-pair-container');
+      let text = document.createElement('div');
+      text.classList.add('key-text');
+      text.innerText = record.text;
+      let state = document.createElement('div');
+      state.classList.add(record.state);
+      state.classList.add('key-color-box');
+
+      elem.appendChild(text);
+      elem.appendChild(state);
+      legend.appendChild(elem);
+    }
+    this.parent.appendChild(legend);
   }
   //event listener for calendar day button
   addOnclick = (td : HTMLElement) =>{
@@ -197,13 +286,22 @@ class Calendar {
     }  
   }
   //mark known events
-  compare = (td: HTMLElement, dateString: string) => {
+  compare = (td: HTMLElement, dateString: string, dayOfWeek) => {
+
+     //strip weekend availability?
+     if( !this.availableOnWeekends && (dayOfWeek == 6 || dayOfWeek == 0) ){
+      td.classList.remove('available');
+      td.classList.add('unavailable');
+    }
 
     for(let i = 0; i  <this.data.length; i++){
       let date = this.data[i];
       //update element classlist on date match
-      if(date.string == dateString)
+      if(date.string == dateString){
         td.classList.add(date.status);
+        if(td.classList.contains('unavailable') && date.status != 'unavailable')
+          td.classList.remove('unavailable');
+      }
     }
   }
   //construct DOM table head
