@@ -1,5 +1,6 @@
 {
     "require": {
-        "phpmailer/phpmailer": "^6.0"
+        "phpmailer/phpmailer": "^6.0",
+        "vlucas/phpdotenv": "^3.1"
     }
 }
