@@ -2,18 +2,19 @@
 ///<reference path="./formBuilder.ts" />
 ///<reference path="../Types/jQuery/jquery.d.ts"/>
 
-
 /**
- * TODO
- * ~implement default auto-load css 
+ * TODO : 
+ * clean up render()
+ * clean up buildHeader()
+ * clean up addNav()
  */
 
-
 class Calendar {
-  //element to build calendadr table inside of
+  //DOM target
   private parent : HTMLElement;
-  //location of data file - relative |  absolute path 
+  //location of data file
   private driverLocation:  string;
+  private data : any;
   //date component values
   private currentYear : number;
   private baseYear : number;
@@ -21,20 +22,12 @@ class Calendar {
   private baseMonth : number;
   private currentDate :Date;
   private baseDate : Date;
-  //retrieve data from file
-  private data : any;
-  //write location
-  private endPoint : string;
-
+  //manage modal input form
   private form : FormBuilder;
-  //override default blockUI positioning
-  private formPosition :any;
 
-  constructor(parentElement : HTMLElement, form? : FormControl, formPosition?: any,   dateOverride ? : Date){
+  constructor(parentElement : HTMLElement, dateOverride ? : Date){
+    //DOM target
     this.parent = parentElement;
-
-    this.formPosition = formPosition ? formPosition : null;
-
     //set default date
     this.baseDate = dateOverride ? dateOverride : new Date();
     this.currentDate = this.baseDate;
@@ -43,30 +36,27 @@ class Calendar {
     this.currentMonth = this.baseMonth;
     //year
     this.baseYear = this.baseDate.getFullYear();
-    this.currentYear = this.baseYear;
-    //initialize submission form
-    let autoLoadStyles = true;
-    this.form = new FormBuilder(autoLoadStyles, form);
-    
+    this.currentYear = this.baseYear;    
   }
-
+  //build user input form
+  createModal = (autoLoadStyles? : boolean, formData ?: FormControl, formContainerStyles? : any ): void => {
+    this.form = new FormBuilder(autoLoadStyles, formData, formContainerStyles);
+  }
+  //adjust css of modal form
+  updateFormPositioning = (formContainerStyles : any): void => {
+    this.form.updateContainerStyle(formContainerStyles);
+  }
+  //point form submit to server
   setEndpoint = (url : string) => {
-    this.endPoint = url;
-    this.form.setEndpoint(this.endPoint);
+    this.form.setEndpoint(url);
   }
-  
-  /**
-   * override default data file location
-   */
+  //add | change data file location
   setDriverLocation = (driverLocation :string): void => {
     this.driverLocation = driverLocation;
   }
-
+  //retrieve data
   getData = () => {
     let pointer= this;
-    if(! this.driverLocation){
-      throw new Error('data source location must be set via calendar.setDriverLocation(url).');
-    }
 
     $.ajax({
       url: this.driverLocation,
@@ -80,14 +70,9 @@ class Calendar {
       pointer.data = e;
       pointer.render();
     })
-    .fail(xhr => {
-      console.log('data lookup failure: ', xhr);
-    })
+    .fail(xhr => {console.log('data lookup failure: ', xhr);});
   }
-
-  /**
-   * step forward | back a month
-   */
+  //get adjacent month/year
   getSibling = (movement : string): any => {
 
     let response = {
@@ -95,31 +80,14 @@ class Calendar {
       year : this.currentYear
     }
 
-    switch(movement){
-      case "next" : {
-        if(this.currentMonth < 11){
-          response.month ++;
-        } else {
-          response.month = 0; 
-          response.year++;
-        }
-        break;
-       }
-      case "prev": {
-        if(this.currentMonth > 0)
-        response.month --;
-        else {
-          response.month = 11;
-          response.year--;
-        }
-      }
-    }
+    if(movement == 'next')
+      this.currentMonth < 11 ? (response.month++) : (response.month = 0, response.year++);
+    if(movement == 'prev')
+      this.currentMonth > 0 ?  (response.month --) : (response.month = 11, response.year--)
+
     return response;
   }
-
-  /**
-   * build calendar table
-   */
+  //construct DOM table body
   render = (): void => {
     this.parent.innerHTML = "";
 
@@ -219,34 +187,26 @@ class Calendar {
     }
     this.buildTable(tbl_html);
   }
-
-  //event listener calendar day button
-
+  //event listener for calendar day button
   addOnclick = (td : HTMLElement) =>{
-    //dont 
-    if(td.classList.contains('dayPast')) return;
-    var pointer = this;
-        td.onclick = function(){
-          pointer.form.showForm((<any>td.dataset).date);
-        }
+    if(!td.classList.contains('dayPast')){
+      var pointer = this;
+      td.onclick = function(){
+        pointer.form.showForm((<any>td.dataset).date);
+      }
+    }  
   }
-
-  /**
-   * check current td's date against known events
-   */
+  //mark known events
   compare = (td: HTMLElement, dateString: string) => {
 
     for(let i = 0; i  <this.data.length; i++){
       let date = this.data[i];
       //update element classlist on date match
-      if(date.string == dateString){
-        //let iconClasses = date.glyphicon;
-        let status = date.status;
-        td.classList.add(status);
-      }
+      if(date.string == dateString)
+        td.classList.add(date.status);
     }
   }
-
+  //construct DOM table head
   buildHeader = (table : HTMLTableElement) => {
     let header = document.createElement('thead');
     let hr = document.createElement('tr');
@@ -274,11 +234,9 @@ class Calendar {
       dayRow.appendChild(th);
     }
     header.appendChild(dayRow);
-
     table.appendChild(header);
-
   }
-
+  //wrapper for firing DOM construct functions
   buildTable = (bodyContent : DocumentFragment) => {
 
     let table = document.createElement('table');
@@ -288,8 +246,9 @@ class Calendar {
     this.buildHeader(table);
    
     table.appendChild(bodyContent);
+    this.parent.innerHTML = "";
     this.parent.appendChild(table);
-    //add day of week bar
+    //navigation
     this.addNav();
   }
 
@@ -341,7 +300,7 @@ class Calendar {
     header.insertBefore(navLeft, header.firstChild);
     header.appendChild(navRight);
   }
-
+  //redraw table
   update = (isRightClick : boolean) => {
 
     let key = isRightClick ? "next" : "prev";

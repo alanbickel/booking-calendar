@@ -209,6 +209,12 @@ class FormBuilder {
 
     this.addControlButtons(formChild);
   }
+  /**
+   * add | change styling for default blockUI container
+   */
+  updateContainerStyle = (stlye : any) => {
+    this.formStyling = stlye;
+  }
 
   bindFormButtonActions = () => {
     let pointer = this;
