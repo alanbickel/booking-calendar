@@ -347,6 +347,15 @@ class FormBuilder {
         let element = document.getElementById(node.id);
         payload[propName] = (<any>element).value;
       }
+    }
+
+      console.log('request uri: ', this.endPoint);
+      console.log('request payload: ', payload);
+
+      $.unblockUI();
+      $.blockUI({
+        message : "Sending your request.  Just a moment..."
+      });
 
       $.ajax({
         url : this.endPoint, 
@@ -356,19 +365,32 @@ class FormBuilder {
       })
       .done(response => {
 
+        console.log(response);
+
+        if(response && response.status == 200){
+          $.unblockUI();
+          $.blockUI({
+            message : "<h4>Your request has been sent.  Thank you for your inquiry!</h4>", 
+            timeout : 2500
+          });
+        }
+        else {
+          $.unblockUI();
+          $.blockUI({
+            message : "<h4>Sorry, our request service is temporarily unavailable.</h4>", 
+            timeout : 2500
+          });
+        }
+
       })
       .fail(xhr => {
         //unable to reach server
         console.log('XHR failure: ', xhr);
-        $.blockUI({message : "Unable to connect to server.  ", timeout : 2000});
+        $.blockUI({
+          message : "<h4>Unable to connect to server.</h4>", 
+          timeout : 2000
+        });
       })
-    }
-
-    /**
-     * TODO ajax request do write to .dat
-     */
-    
-     debugger;
   }
 
   setEndpoint = (url :string) => {
