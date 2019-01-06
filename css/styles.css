@@ -10,23 +10,64 @@ td.header{
   text-align: center;
   width: 50px;
   height: 50px;
+  border : 1px solid grey;
+  border-radius : 5px;
 }
 
-.day:not(.dayPast){
+.day:not(.dayPast):not(.unavailable){
   cursor: pointer;
 }
-
 
 /*navigation*/
 .nav-arrow {
   cursor: pointer;
 }
-
 .nav-left{
   float: left;
 }
-
 .nav-right{
   float: right;
   margin-top: -18px;
+}
+
+/*STATUS BASED STYLING*/
+.booked {
+  background: rgb(226, 158, 158);
+}
+.pending{
+  background :rgb(222, 248, 156);
+}
+.unavailable, .dayPast{
+  background: #d1d0d0;
+  cursor : default;
+}
+
+.today>span {
+  display: none;
+}
+.today:after{
+  content: "Today"
+}
+
+
+/*legend*/
+
+.key-container {
+  display : flex;
+  flex-direction: row;
+  margin-top : 25px;
+  border-radius: 3px;
+  
+}
+
+.key-pair-container{
+  display : flex;
+}
+
+.key-color-box {
+  min-width: 20px;
+  min-height: 20px;
+  margin-left: 10px;
+  margin-right: 10px;
+  border: 1px solid lightgray;
 }
