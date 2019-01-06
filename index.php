@@ -3,9 +3,9 @@
 ?>
 
 <head>
+  <link rel="stylesheet" href="./vendor/font-awesome-4.7.0/css/font-awesome.css">
 
- <link rel="stylesheet"  href="./vendor/font-awesome-4.7.0/css/font-awesome.min.css">
- <link rel="stylesheet" href="./css/styles.css">
+
 <script
   src="https://code.jquery.com/jquery-3.3.1.min.js"
   integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
@@ -15,10 +15,20 @@
   <script>
     $(document).ready(function(){
       let calendar = new Calendar(document.getElementById('calendar-div'));
+      //toggle color key display
+      calendar.displayLegend(true);
+      //build user input form
+      calendar.createModal("./vendor/js/malsup/blockui.js");
+      //style for modal form
+      calendar.loadFormStyles('./css/form-styles.css');
+      //style for calendar
+      calendar.loadSelfStyles("./css/styles.css");
+      //data source
       calendar.setDriverLocation("./services/dates.dat");
+      //where to send request
       calendar.setEndpoint("./services/request/");
+      //get data, render calendar
       calendar.getData();
-     // calendar.render();
     });
   </script>
 </head>
