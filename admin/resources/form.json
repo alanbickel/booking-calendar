@@ -12,6 +12,7 @@
         "opts" : [
           {"text" : "Available", "value" : "available"}, 
           {"text" : "Booked", "value" : "booked"},
+          {"text" : "Pending", "value" : "pending"},
           {"text" : "Unavailable", "value" : "unavailable"}
         ]
       }
