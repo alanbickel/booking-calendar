@@ -3,7 +3,7 @@
 ?>
 
 <head>
-  <link rel="stylesheet" href="./vendor/font-awesome-4.7.0/css/font-awesome.css">
+  <link rel="stylesheet" href="./css/font-awesome-4.7.0/css/font-awesome.css">
 
 
 <script
@@ -18,7 +18,7 @@
       //toggle color key display
       calendar.displayLegend(true);
       //build user input form
-      calendar.createModal("./vendor/js/malsup/blockui.js");
+      calendar.createModal("./js/malsup/blockui.js");
       //style for modal form
       calendar.loadFormStyles('./css/form-styles.css');
       //style for calendar

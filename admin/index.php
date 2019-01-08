@@ -4,7 +4,7 @@
 
 <head>
 
-<link rel="stylesheet" href="../vendor/font-awesome-4.7.0/css/font-awesome.css">
+<link rel="stylesheet" href="../css/font-awesome-4.7.0/css/font-awesome.css">
 <script
  src="https://code.jquery.com/jquery-3.3.1.min.js"
  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
@@ -26,7 +26,7 @@
       //initialize calendar, provide form template
       calendar = new Calendar(document.getElementById('calendar-div') );
       //build user input form
-      calendar.createModal("../vendor/js/malsup/blockui.js",formData );
+      calendar.createModal("../js/malsup/blockui.js",formData );
       //style for modal form
       calendar.loadFormStyles('../css/form-styles.css');
       //style for calendar

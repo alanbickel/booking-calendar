@@ -41,7 +41,7 @@ try {
     $mail->setFrom($MAILER_USER, 'Automated Event Request');
 
     //DESTINATION
-    $mail->addAddress('event.calendar.test.project@gmail.com', 'Automated Web Request');
+    $mail->addAddress($MAILER_USER, 'Automated Web Request');
 
     //Content
     $mail->isHTML(true);                                  
