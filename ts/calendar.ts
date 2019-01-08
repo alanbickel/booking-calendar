@@ -7,6 +7,9 @@
  * clean up render()
  * clean up buildHeader()
  * clean up addNav()
+ * implement CLIENT-ONLY mode - no click event binding, 
+ * 
+ * 
  */
 
 class Calendar {
