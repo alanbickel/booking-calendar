@@ -134,9 +134,9 @@ This function retrieves data file contents, parses the dates, and then renders t
 
 ### Additional Customization
 
-- set custom message on submit success or failure
 ```javascript 
 /**
+ * set custom message on submit success or failure
  * @param status - string 'success' | 'failure'
  * @param message - string 'your custom message'
 */
