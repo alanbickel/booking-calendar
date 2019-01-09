@@ -7,6 +7,7 @@
  * clean up render()
  * clean up buildHeader()
  * clean up addNav()
+ * toggle weekend availability
  * implement CLIENT-ONLY mode - no click event binding, 
  * 
  * 
@@ -52,6 +53,10 @@ class Calendar {
   //toggle show | hide color key for table
   displayLegend = (state : boolean) => {
     this.showLegend = state;
+  }
+
+  weekendAvailability = (status: boolean) => {
+    this.availableOnWeekends = status;
   }
 
   //set style location for form 
