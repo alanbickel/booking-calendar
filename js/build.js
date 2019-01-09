@@ -381,6 +381,10 @@ var FormBuilder = (function () {
  * clean up render()
  * clean up buildHeader()
  * clean up addNav()
+ * toggle weekend availability
+ * implement CLIENT-ONLY mode - no click event binding,
+ *
+ *
  */
 var Calendar = (function () {
     function Calendar(parentElement, dateOverride) {
@@ -388,6 +392,9 @@ var Calendar = (function () {
         //toggle show | hide color key for table
         this.displayLegend = function (state) {
             _this.showLegend = state;
+        };
+        this.weekendAvailability = function (status) {
+            _this.availableOnWeekends = status;
         };
         //set style location for form 
         this.loadFormStyles = function (stylePath) {
