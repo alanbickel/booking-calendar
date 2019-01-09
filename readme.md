@@ -1,7 +1,7 @@
 
 # Event Calendar
 
-A simple JS (TypeScript) | PHP application for a booking calendar, with minimal dependencies. The current incarnation supports full-day booking, and offers at-a-glance information about your availability. User friendly, fully customize-able input forms allow potential customers to request your services with just a few clicks. You control the layout, content, and validation, through a simple `.JSON` form object.
+A simple JS (TypeScript) | PHP application for an event-booking calendar, with minimal dependencies. This version supports full-day booking, and offers users an at-a-glance overview of your availability. User friendly, fully customize-able input forms allow potential customers to request your services with just a few clicks. You control the layout, content, and validation, through a simple `.JSON` form object.
 
 Admin page allows you to quickly set the status for a given date.
 
@@ -113,7 +113,7 @@ We can load styles for the calendar in a similar fashion
 
 ### Loading Dates  - (Showing status)
 
-Remember the  `calendar-root/` forlder from way up in the server configuration? 
+Remember the  `calendar-root/` folder from way up in the server configuration? 
 The default path to the dates file is `calendar-root/services/dates.dat`
 
 ```javascript
@@ -131,5 +131,30 @@ Now, you're all wired up, and ready to render the calendar.
 
 `calendar.getData();`
 This function retrieves data file contents, parses the dates, and then renders the calendar   
+
+### Additional Customization
+
+- set custom message on submit success or failure
+```javascript 
+/**
+ * @param status - string 'success' | 'failure'
+ * @param message - string 'your custom message'
+*/
+calendar.setRequestCompleteMessage(status,message);
+
+
+/** update the position | styling of input form 
+ * 
+ * @param styleObject - an object containing any valid css rules for the form's container
+*/
+calendar.updateFormPositioning(styleObject);
+
+
+/**
+ * set to dis | allow saturday and sundays
+ * default is false;
+*/
+calendar.weekendAvailability(true | false);
+```
 
 
