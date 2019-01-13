@@ -65,7 +65,7 @@ var FormBuilder = (function () {
             /**add  empty header element - to be populated with date on show */
             var header = document.createElement('div');
             header.classList.add('form-header');
-            header.id = "form-header";
+            header.id = parentElementId + "-form-header";
             formChild.appendChild(header);
             var formRows = _this.defaultForm['rows'];
             for (var i = 0; i < formRows.length; i++) {
@@ -287,12 +287,13 @@ var FormBuilder = (function () {
             pointer.showForm = function (date) {
                 var parts = date.split("-");
                 var dateString = parts[1] + "/" + parts[2] + "/" + parts[0];
-                var header = document.getElementById('form-header');
+                var parentElementId = this.parent.getParent().id;
+                var header = document.getElementById(parentElementId + '-form-header');
                 //store server-formatted date
                 header.dataset.date = date;
                 header.innerText = dateString;
                 $.blockUI({
-                    message: document.getElementById('input-form'),
+                    message: document.getElementById(parentElementId + '-input-form'),
                     css: this.modalContainerStyling
                 });
             };

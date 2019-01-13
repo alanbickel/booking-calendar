@@ -51,13 +51,14 @@ class FormBuilder {
       pointer.showForm = function (date: string) {
         let parts = date.split("-");
         let dateString = parts[1]+"/"+parts[2]+"/"+parts[0];
-        let header = document.getElementById('form-header');
+        let parentElementId = this.parent.getParent().id;
+        let header = document.getElementById(parentElementId + '-form-header');
         //store server-formatted date
         header.dataset.date = date;
           
         header.innerText = dateString;
         $.blockUI({
-            message: document.getElementById('input-form'),
+            message: document.getElementById(parentElementId + '-input-form'),
             css: this.modalContainerStyling
         });
     };
@@ -164,7 +165,7 @@ class FormBuilder {
     /**add  empty header element - to be populated with date on show */
     let header = document.createElement('div');
     header.classList.add('form-header');
-    header.id = "form-header";
+    header.id = parentElementId + "-form-header";
 
     formChild.appendChild(header);
 
