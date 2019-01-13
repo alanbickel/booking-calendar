@@ -223,7 +223,8 @@ class FormBuilder {
     });
     $(document).on('click', "#form-submit-button", function(){
      let validInput =  pointer.validate();
-     let dateString = document.getElementById("form-header").dataset.date;
+     let formParentId = pointer.getCalendarParentId();
+     let dateString = document.getElementById(formParentId + "-form-header").dataset.date;
     
      if(! validInput) return false;
 
@@ -323,7 +324,8 @@ class FormBuilder {
 
       if(!validation.function(inputValue)){
         let message = validation.failMessage;
-        var header = document.getElementById("form-header");
+        let parentElementId = this.parent.getParent().id;
+        var header = document.getElementById(parentElementId + "-form-header");
         var dateString = header.innerText;
         header.innerText = message;
         setTimeout(function(){
@@ -334,6 +336,10 @@ class FormBuilder {
       }
     }
     return true;
+  }
+
+  getCalendarParentId = () => {
+    return this.parent.getParent().id;
   }
 
   setResponseMessage = (status : string, message : string): void => {

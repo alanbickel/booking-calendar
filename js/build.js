@@ -113,7 +113,8 @@ var FormBuilder = (function () {
             });
             $(document).on('click', "#form-submit-button", function () {
                 var validInput = pointer.validate();
-                var dateString = document.getElementById("form-header").dataset.date;
+                var formParentId = pointer.getCalendarParentId();
+                var dateString = document.getElementById(formParentId + "-form-header").dataset.date;
                 if (!validInput)
                     return false;
                 pointer.submitForm(dateString);
@@ -197,7 +198,8 @@ var FormBuilder = (function () {
                 var inputValue = document.getElementById(validation.elementId).value;
                 if (!validation.function(inputValue)) {
                     var message = validation.failMessage;
-                    var header = document.getElementById("form-header");
+                    var parentElementId = _this.parent.getParent().id;
+                    var header = document.getElementById(parentElementId + "-form-header");
                     var dateString = header.innerText;
                     header.innerText = message;
                     setTimeout(function () {
@@ -207,6 +209,9 @@ var FormBuilder = (function () {
                 }
             }
             return true;
+        };
+        this.getCalendarParentId = function () {
+            return _this.parent.getParent().id;
         };
         this.setResponseMessage = function (status, message) {
             if (status == 'success')
