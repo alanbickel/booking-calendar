@@ -402,7 +402,7 @@ class Calendar {
     navLeft.appendChild(arrowLeft);
     navRight.appendChild(arrowRight);
 
-    let header = document.getElementById('cal-tbl-header');
+    let header = this.parent.querySelector(".cal-header");//document.getElementById('cal-tbl-header');
     header.insertBefore(navLeft, header.firstChild);
     header.appendChild(navRight);
   }

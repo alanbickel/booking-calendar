@@ -707,7 +707,7 @@ var Calendar = (function () {
             arrowRight.classList.add('fa-arrow-right');
             navLeft.appendChild(arrowLeft);
             navRight.appendChild(arrowRight);
-            var header = document.getElementById('cal-tbl-header');
+            var header = _this.parent.querySelector(".cal-header"); //document.getElementById('cal-tbl-header');
             header.insertBefore(navLeft, header.firstChild);
             header.appendChild(navRight);
         };
