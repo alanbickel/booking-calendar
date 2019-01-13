@@ -55,6 +55,10 @@ class Calendar {
     this.showLegend = state;
   }
 
+  getParent  = () =>{
+    return this.parent;
+  }
+
   weekendAvailability = (status: boolean) => {
     this.availableOnWeekends = status;
   }

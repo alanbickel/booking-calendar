@@ -151,9 +151,10 @@ class FormBuilder {
 
   buildForm = () =>  {
     let form = document.createElement('div'); 
+    let parentElementId = this.parent.getParent().id;
     
     form.style.display = "none"; 
-    form.id = "input-form";
+    form.id = parentElementId + "-input-form";
 
     let formChild = document.createElement('div');
     formChild.classList.add('display-form'); 

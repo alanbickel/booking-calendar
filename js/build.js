@@ -56,8 +56,9 @@ var FormBuilder = (function () {
         };
         this.buildForm = function () {
             var form = document.createElement('div');
+            var parentElementId = _this.parent.getParent().id;
             form.style.display = "none";
-            form.id = "input-form";
+            form.id = parentElementId + "-input-form";
             var formChild = document.createElement('div');
             formChild.classList.add('display-form');
             form.appendChild(formChild);
@@ -392,6 +393,9 @@ var Calendar = (function () {
         //toggle show | hide color key for table
         this.displayLegend = function (state) {
             _this.showLegend = state;
+        };
+        this.getParent = function () {
+            return _this.parent;
         };
         this.weekendAvailability = function (status) {
             _this.availableOnWeekends = status;
